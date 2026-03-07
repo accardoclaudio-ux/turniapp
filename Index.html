@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestionale Turni — Catagnina T2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap');
+  :root{--bg:#0d0f14;--surface:#151820;--surface2:#1c2030;--border:#252a38;--accent:#4f9eff;--accent2:#ff6b4a;--text:#e8eaf0;--text2:#7a8099;--mattina:#4f9eff;--pomeriggio:#ff6b4a;--riposo:#3a3f52;--rep-mat:#a78bfa;--rep-pom:#fb923c;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(79,158,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(79,158,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .container{max-width:1200px;margin:0 auto;padding:2rem;position:relative;z-index:1;}
+  header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:1rem;}
+  .logo{font-size:2rem;font-weight:800;letter-spacing:-0.03em;}.logo span{color:var(--accent);}
+  .subtitle{color:var(--text2);font-family:'DM Mono',monospace;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;}
+  .tabs{display:flex;gap:.5rem;margin-bottom:2rem;background:var(--surface);padding:.4rem;border-radius:12px;border:1px solid var(--border);width:fit-content;flex-wrap:wrap;}
+  .tab{padding:.6rem 1.2rem;border-radius:8px;border:none;background:transparent;color:var(--text2);font-family:'Syne',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s;}
+  .tab.active{background:var(--accent);color:#fff;}.tab:hover:not(.active){color:var(--text);}
+  .panel{display:none;}.panel.active{display:block;}
+  .search-row{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:flex-end;}
+  .field{display:flex;flex-direction:column;gap:.4rem;}
+  label{font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);}
+  select,input{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:.6rem 1rem;border-radius:8px;font-family:'DM Mono',monospace;font-size:.88rem;outline:none;transition:border-color .2s;min-width:180px;}
+  select:focus,input:focus{border-color:var(--accent);}
+  .btn{padding:.65rem 1.5rem;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s;}
+  .btn:hover{background:#6aadff;transform:translateY(-1px);}
+  .legend{display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:1.5rem;padding:.8rem 1rem;background:var(--surface);border-radius:8px;border:1px solid var(--border);}
+  .legend-item{display:flex;align-items:center;gap:.4rem;font-family:'DM Mono',monospace;font-size:.72rem;color:var(--text2);}
+  .legend-dot{width:8px;height:8px;border-radius:50%;}
+  .weeks-grid{display:grid;gap:.6rem;}
+  .week-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.9rem 1.2rem;display:grid;grid-template-columns:160px 70px 1fr;align-items:center;gap:1rem;}
+  .week-row.current-week{border-color:var(--accent);background:rgba(79,158,255,.06);}
+  .week-row.claudio-hl{border-color:#4fffb0;background:rgba(79,255,176,.05);}
+  .week-label{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--text2);}
+  .week-label strong{display:block;color:var(--text);font-size:.92rem;}
+  .week-position{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--text2);text-align:center;}
+  .week-position .pos-num{display:block;font-size:1.3rem;font-weight:500;color:var(--text);}
+  .days-row{display:grid;grid-template-columns:repeat(7,1fr);gap:.3rem;}
+  .day-cell{border-radius:6px;padding:.3rem .2rem;text-align:center;}
+  .day-name{color:var(--text2);font-size:.58rem;letter-spacing:.05em;display:block;margin-bottom:2px;font-family:'DM Mono',monospace;}
+  .day-shift{font-size:.68rem;font-weight:500;display:block;padding:2px 3px;border-radius:4px;font-family:'DM Mono',monospace;}
+  .shift-mattina .day-shift{background:rgba(79,158,255,.15);color:var(--mattina);}
+  .shift-pomeriggio .day-shift{background:rgba(255,107,74,.15);color:var(--pomeriggio);}
+  .shift-riposo .day-shift{background:rgba(58,63,82,.5);color:var(--text2);}
+  .shift-rep-mat .day-shift{background:rgba(167,139,250,.15);color:var(--rep-mat);}
+  .shift-rep-pom .day-shift{background:rgba(251,146,60,.15);color:var(--rep-pom);}
+  .worker-badge{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.8rem 1.2rem;display:inline-flex;align-items:center;gap:1rem;margin-bottom:1.5rem;}
+  .worker-code{font-family:'DM Mono',monospace;font-size:1.2rem;font-weight:500;color:var(--accent);}
+  .worker-info{font-size:.83rem;color:var(--text2);}
+  .current-badge{font-family:'DM Mono',monospace;font-size:.62rem;background:var(--accent);color:#fff;padding:.15rem .5rem;border-radius:20px;margin-left:.5rem;vertical-align:middle;}
+  .weekly-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.6rem;margin-top:1rem;}
+  .day-column{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  .day-header{background:var(--surface2);padding:.6rem;text-align:center;font-size:.75rem;font-weight:700;letter-spacing:.05em;border-bottom:1px solid var(--border);}
+  .day-header.weekend{color:var(--accent2);}
+  .shift-list{padding:.5rem;}
+  .shift-item{padding:.4rem .6rem;border-radius:6px;margin-bottom:.3rem;font-family:'DM Mono',monospace;font-size:.7rem;}
+  .shift-item .worker-name{display:block;font-weight:500;font-size:.72rem;color:var(--text);}
+  .shift-item .shift-type{font-size:.62rem;margin-top:1px;}
+  .shift-item.mattina{background:rgba(79,158,255,.1);border-left:2px solid var(--mattina);}
+  .shift-item.mattina .shift-type{color:var(--mattina);}
+  .shift-item.pomeriggio{background:rgba(255,107,74,.1);border-left:2px solid var(--pomeriggio);}
+  .shift-item.pomeriggio .shift-type{color:var(--pomeriggio);}
+  .shift-item.rep-mat{background:rgba(167,139,250,.1);border-left:2px solid var(--rep-mat);}
+  .shift-item.rep-mat .shift-type{color:var(--rep-mat);}
+  .shift-item.rep-pom{background:rgba(251,146,60,.1);border-left:2px solid var(--rep-pom);}
+  .shift-item.rep-pom .shift-type{color:var(--rep-pom);}
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2rem;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;}
+  .stat-label{font-family:'DM Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text2);margin-bottom:.3rem;}
+  .stat-value{font-size:1.6rem;font-weight:800;}
+  .group-section{margin-bottom:2rem;}
+  .group-title{font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);}
+  .empty-state{text-align:center;padding:4rem 2rem;color:var(--text2);}
+  .empty-state .icon{font-size:3rem;margin-bottom:1rem;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .result-section{animation:fadeIn .3s ease;}
+
+/* ── Turno del Giorno ── */
+.giorno-header{display:flex;align-items:center;gap:1.2rem;margin-bottom:1.8rem;flex-wrap:wrap;}
+.giorno-date-badge{background:var(–surface2);border:1px solid var(–border);border-radius:12px;padding:.7rem 1.2rem;font-family:‘DM Mono’,monospace;}
+.giorno-date-badge .gdb-day{font-size:1.5rem;font-weight:700;color:var(–text);line-height:1;}
+.giorno-date-badge .gdb-label{font-size:.65rem;color:var(–text2);text-transform:uppercase;letter-spacing:.1em;margin-top:.2rem;}
+.giorno-totals{display:flex;gap:.6rem;flex-wrap:wrap;}
+.giorno-pill{font-family:‘DM Mono’,monospace;font-size:.72rem;padding:.3rem .8rem;border-radius:20px;border:1px solid;}
+
+.giorno-list{display:grid;gap:.35rem;}
+.giorno-row{background:var(–surface);border:1px solid var(–border);border-radius:8px;padding:.65rem 1rem;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:1rem;transition:background .15s;}
+.giorno-row:hover{background:var(–surface2);}
+.giorno-worker{font-family:‘DM Mono’,monospace;font-size:.83rem;font-weight:500;color:var(–text);}
+.giorno-group{font-family:‘DM Mono’,monospace;font-size:.65rem;color:var(–text2);}
+.giorno-shift-badge{font-family:‘DM Mono’,monospace;font-size:.7rem;padding:.25rem .65rem;border-radius:6px;font-weight:500;white-space:nowrap;}
+.giorno-shift-badge.mattina{background:rgba(79,158,255,.15);color:var(–mattina);}
+.giorno-shift-badge.pomeriggio{background:rgba(255,107,74,.15);color:var(–pomeriggio);}
+.giorno-shift-badge.rep-mat{background:rgba(167,139,250,.15);color:var(–rep-mat);}
+.giorno-shift-badge.rep-pom{background:rgba(251,146,60,.15);color:var(–rep-pom);}
+.giorno-shift-badge.riposo{background:rgba(58,63,82,.4);color:var(–text2);}
+.giorno-code{font-family:‘DM Mono’,monospace;font-size:.7rem;color:var(–text2);}
+
+.section-divider{font-family:‘DM Mono’,monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(–text2);margin:1.2rem 0 .5rem;padding:.3rem .6rem;background:var(–surface2);border-radius:6px;display:inline-block;}
+
+.giorno-filter-tabs{display:flex;gap:.4rem;margin-bottom:1.2rem;flex-wrap:wrap;}
+.gf-tab{padding:.35rem .9rem;border-radius:20px;border:1px solid var(–border);background:transparent;color:var(–text2);font-family:‘DM Mono’,monospace;font-size:.72rem;cursor:pointer;transition:all .2s;}
+.gf-tab.active{color:#fff;border-color:transparent;}
+.gf-tab.active.all{background:var(–accent);}
+.gf-tab.active.mattina{background:var(–mattina);}
+.gf-tab.active.pomeriggio{background:var(–pomeriggio);}
+.gf-tab.active.rep-mat{background:var(–rep-mat);}
+.gf-tab.active.rep-pom{background:var(–rep-pom);}
+.gf-tab.active.riposo{background:var(–riposo);}
+.gf-tab:hover:not(.active){color:var(–text);}
+
+/* ── Cerca Turno ── */
+.turno-result-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.turno-num-badge{font-family:‘DM Mono’,monospace;font-size:2rem;font-weight:700;color:var(–text);background:var(–surface2);border:1px solid var(–border);border-radius:12px;padding:.5rem 1.2rem;line-height:1;}
+.turno-num-badge .tnb-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:var(–text2);display:block;margin-bottom:.2rem;}
+.turno-num-badge .tnb-type{font-size:.72rem;margin-top:.3rem;display:block;}
+.cerca-turno-list{display:grid;gap:.35rem;}
+.ct-row{background:var(–surface);border:1px solid var(–border);border-radius:8px;padding:.7rem 1rem;display:grid;grid-template-columns:1fr auto;align-items:center;gap:1rem;transition:background .15s;}
+.ct-row:hover{background:var(–surface2);}
+.ct-worker{font-family:‘DM Mono’,monospace;font-size:.85rem;font-weight:500;color:var(–text);}
+.ct-group{font-family:‘DM Mono’,monospace;font-size:.65rem;color:var(–text2);margin-top:.15rem;}
+.ct-days{display:flex;gap:.3rem;flex-wrap:wrap;justify-content:flex-end;}
+.ct-day-pill{font-family:‘DM Mono’,monospace;font-size:.68rem;padding:.2rem .55rem;border-radius:6px;}
+</style>
+
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <div class="logo">TURNI<span>.</span>APP</div>
+      <div class="subtitle">Catagnina T2 — In vigore dal 07/01/2026</div>
+    </div>
+    <div style="text-align:right">
+      <div class="subtitle" id="today-label"></div>
+      <div style="font-family:'DM Mono',monospace;font-size:.75rem;color:var(--accent);margin-top:.3rem" id="week-info"></div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('cerca',this)">👤 Cerca Lavoratore</button>
+    <button class="tab" onclick="switchTab('cercaturno',this)">🔢 Cerca Turno</button>
+    <button class="tab" onclick="switchTab('giorno',this)">📋 Turno del Giorno</button>
+    <button class="tab" onclick="switchTab('turno',this)">🌅 Mattina / Pomeriggio</button>
+    <button class="tab" onclick="switchTab('settimanale',this)">📅 Vista Settimana</button>
+    <button class="tab" onclick="switchTab('panoramica',this)">📊 Panoramica</button>
+  </div>
+
+  <!-- TAB: Cerca Lavoratore -->
+
+  <div class="panel active" id="panel-cerca">
+    <div class="search-row">
+      <div class="field">
+        <label>Gruppo</label>
+        <select id="s-group" onchange="updateWorkerList()">
+          <option value="">Tutti</option>
+          <option value="AT">A3 AT</option>
+          <option value="exATN">A1 ex ATN</option>
+          <option value="CTTnord">A2 ex CTT</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Lavoratore</label>
+        <select id="s-worker" style="min-width:240px"><option value="">Seleziona...</option></select>
+      </div>
+      <div class="field">
+        <label>Da settimana</label>
+        <input type="date" id="s-from"/>
+      </div>
+      <div class="field">
+        <label>N° settimane</label>
+        <input type="number" id="s-weeks" value="8" min="1" max="52" style="min-width:80px"/>
+      </div>
+      <div class="field" style="justify-content:flex-end">
+        <button class="btn" onclick="searchWorker()">Cerca</button>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--mattina)"></div>Mattina (dispari)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--pomeriggio)"></div>Pomeriggio (pari)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--rep-mat)"></div>Rep. Mattina (R1-R3)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--rep-pom)"></div>Rep. Pom. (R4+)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--riposo)"></div>Riposo</div>
+    </div>
+    <div id="r-cerca"><div class="empty-state"><div class="icon">🔍</div><p>Seleziona un lavoratore per vedere i suoi turni</p></div></div>
+  </div>
+
+  <!-- TAB: Cerca Turno -->
+
+  <div class="panel" id="panel-cercaturno">
+    <div class="search-row">
+      <div class="field">
+        <label>Numero turno</label>
+        <input type="number" id="ct-num" min="100" max="999" placeholder="es. 136" style="min-width:140px"/>
+      </div>
+      <div class="field">
+        <label>Settimana del</label>
+        <input type="date" id="ct-date"/>
+      </div>
+      <div class="field">
+        <label>Gruppo</label>
+        <select id="ct-group">
+          <option value="">Tutti i gruppi</option>
+          <option value="AT">A3 AT</option>
+          <option value="exATN">A1 ex ATN</option>
+          <option value="CTTnord">A2 ex CTT</option>
+        </select>
+      </div>
+      <div class="field" style="justify-content:flex-end">
+        <button class="btn" onclick="searchTurnoNum()">Cerca</button>
+      </div>
+    </div>
+    <div id="r-cercaturno">
+      <div class="empty-state"><div class="icon">🔢</div><p>Inserisci un numero di turno e una settimana per vedere a chi è assegnato</p></div>
+    </div>
+  </div>
+
+  <!-- TAB: Turno del Giorno -->
+
+  <div class="panel" id="panel-giorno">
+    <div class="search-row">
+      <div class="field">
+        <label>Giorno</label>
+        <input type="date" id="g-date"/>
+      </div>
+      <div class="field">
+        <label>Gruppo</label>
+        <select id="g-group">
+          <option value="">Tutti i gruppi</option>
+          <option value="AT">A3 AT</option>
+          <option value="exATN">A1 ex ATN</option>
+          <option value="CTTnord">A2 ex CTT</option>
+        </select>
+      </div>
+      <div class="field" style="justify-content:flex-end">
+        <button class="btn" onclick="showGiornoView()">Visualizza</button>
+      </div>
+    </div>
+    <div id="r-giorno">
+      <div class="empty-state"><div class="icon">📋</div><p>Seleziona un giorno per vedere tutti i turni assegnati</p></div>
+    </div>
+  </div>
+
+  <!-- TAB: Mattina / Pomeriggio -->
+
+  <div class="panel" id="panel-turno">
+    <div class="search-row">
+      <div class="field"><label>Settimana del</label><input type="date" id="t-date"/></div>
+      <div class="field">
+        <label>Tipo turno</label>
+        <select id="t-type">
+          <option value="mattina">🌅 Mattina (dispari)</option>
+          <option value="pomeriggio">🌆 Pomeriggio (pari)</option>
+          <option value="rep-mat">🔶 Rep. Mattina (R1-R3)</option>
+          <option value="rep-pom">🔷 Rep. Pom. (R4+)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Giorno</label>
+        <select id="t-day">
+          <option value="">Tutta la settimana</option>
+          <option value="0">Lunedì</option>
+          <option value="1">Martedì</option>
+          <option value="2">Mercoledì</option>
+          <option value="3">Giovedì</option>
+          <option value="4">Venerdì</option>
+          <option value="5">Sabato</option>
+          <option value="6">Domenica</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Gruppo</label>
+        <select id="t-group">
+          <option value="">Tutti</option>
+          <option value="AT">A3 AT</option>
+          <option value="exATN">A1 ex ATN</option>
+          <option value="CTTnord">A2 ex CTT</option>
+        </select>
+      </div>
+      <div class="field" style="justify-content:flex-end"><button class="btn" onclick="showTurnoView()">Cerca</button></div>
+    </div>
+    <div id="r-turno"><div class="empty-state"><div class="icon">🌅</div><p>Seleziona una settimana e un tipo di turno</p></div></div>
+  </div>
+
+  <!-- TAB: Vista Settimana -->
+
+  <div class="panel" id="panel-settimanale">
+    <div class="search-row">
+      <div class="field"><label>Settimana del</label><input type="date" id="w-date"/></div>
+      <div class="field">
+        <label>Gruppo</label>
+        <select id="w-group">
+          <option value="">Tutti</option>
+          <option value="AT">A3 AT</option>
+          <option value="exATN">A1 ex ATN</option>
+          <option value="CTTnord">A2 ex CTT</option>
+        </select>
+      </div>
+      <div class="field" style="justify-content:flex-end"><button class="btn" onclick="showWeekView()">Visualizza</button></div>
+    </div>
+    <div id="r-week"><div class="empty-state"><div class="icon">📅</div><p>Seleziona una data per vedere i turni della settimana</p></div></div>
+  </div>
+
+  <!-- TAB: Panoramica -->
+
+  <div class="panel" id="panel-panoramica">
+    <div class="search-row">
+      <div class="field"><label>Settimana del</label><input type="date" id="o-date"/></div>
+      <div class="field" style="justify-content:flex-end"><button class="btn" onclick="showOverview()">Aggiorna</button></div>
+    </div>
+    <div class="stats-row" id="o-stats"></div>
+    <div id="r-overview"><div class="empty-state"><div class="icon">📊</div><p>Seleziona una data per la panoramica completa</p></div></div>
+  </div>
+</div>
+
+<script>
+const START_MONDAY = new Date('2026-01-05');
+const DAYS = ['LUN','MAR','MER','GIO','VEN','SAB','DOM'];
+const DAY_NAMES_FULL = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
+
+const ROTATIONS = {
+  exATN: [
+    {pos:1,name:'VOLPI PAOLO',s:['RIP',107,107,107,107,107,'RIP']},
+    {pos:2,name:'GRULLI ALESSANDRO',s:[124,124,124,124,124,124,'RIP']},
+    {pos:3,name:'GUASTALLI MATTEO',s:['R3','R3','R3','R3','R3','R3','RIP']},
+    {pos:4,name:'GUELFI GABRIELE',s:[111,111,111,111,111,111,'RIP']},
+    {pos:5,name:'GUIDI ALESSANDRO',s:[112,112,112,112,112,112,'RIP']},
+    {pos:6,name:'LEONARDI PIERLUIGI',s:[123,123,123,123,123,123,'RIP']},
+    {pos:7,name:'LUNARDINI MATTEO',s:['R11','R11','R11','R11','R11','RIP',122]},
+    {pos:8,name:'MANNELLA GIORGIO',s:[119,119,119,119,'RIP',119,116]},
+    {pos:9,name:'MANTOVANI ALESSANDRO',s:[114,114,114,'RIP',114,114,101]},
+    {pos:10,name:'DEL FREO DOMENICA',s:['RIP','R1','R1','R1','R1','R1','RIP']},
+    {pos:11,name:'MARCUCCETTI GIUSEPPE',s:[144,144,144,144,144,144,'RIP']},
+    {pos:12,name:'MAUCERI ANTONIO',s:[137,137,137,137,137,137,'RIP']},
+    {pos:13,name:'ZAVANI ANDREA',s:['R13','R13','R13','R13','R13','R13','RIP']},
+    {pos:14,name:'MEDUSEI PAOLO',s:[103,103,103,103,103,103,'RIP']},
+    {pos:15,name:'MENCONI MARCO',s:[128,128,128,128,128,128,'RIP']},
+    {pos:16,name:'FOSCHI FEDERICO',s:[126,126,126,126,'RIP',126,105]},
+    {pos:17,name:'DEL BERGIOLO STEFANO',s:[131,131,131,'RIP',131,131,106]},
+    {pos:18,name:'MICALI AMANDA',s:['R12','R12','RIP','R12','R12','R12','R3']},
+    {pos:19,name:'MONTONE GIOVANNI',s:[107,'RIP','R6',114,126,183,'RIP']},
+    {pos:20,name:'MUSSI DANIELE',s:[133,133,133,133,133,133,'RIP']},
+    {pos:21,name:'NARI PAOLO',s:['R10',187,'R12','R2',119,'R11','RIP']},
+    {pos:22,name:'NOVELLI MICHELE',s:[165,165,165,165,165,165,'RIP']},
+    {pos:23,name:'ORLANDI CARLO',s:[170,170,170,170,170,170,'RIP']},
+    {pos:24,name:'PALMA GIACOMO',s:['R7','R7','R7','R7','R7','R7','RIP']},
+    {pos:25,name:'PITANTI ANTONIO',s:[183,183,183,183,183,'RIP',104]},
+    {pos:26,name:'POGGI ANDREA',s:[140,104,138,162,'RIP',130,'R2']},
+    {pos:27,name:'FINELLI GIANNI',s:[147,147,'RIP',147,147,147,120]},
+    {pos:28,name:'RICCI MARIA BEATRICE',s:['RIP',140,140,140,140,140,'RIP']},
+    {pos:29,name:'BORZONI ERNESTO',s:['R4','R4','R4','R4','R4','R4','RIP']},
+    {pos:30,name:'SALVIETTI DAVIDE',s:[139,139,139,139,139,139,'RIP']},
+    {pos:31,name:"D'ANNA SALVATORE",s:['R9','R9','R9','R9','R9','R9','RIP']},
+    {pos:32,name:'TAMAGNA MICHELE',s:[157,157,157,157,157,157,'RIP']},
+    {pos:33,name:'TENERANI LUIGI',s:['R14','R14','R14','R14','R14','R14','RIP']},
+    {pos:34,name:'DELLA PINA SAURO',s:['R1',143,147,131,193,'RIP',128]},
+    {pos:35,name:'FAZZI LEONARDO',s:[138,138,'RIP',138,138,138,126]},
+    {pos:36,name:'ANDREANI DAVIDE',s:[187,'RIP',187,187,187,187,'R1']},
+    {pos:37,name:'TELLESCHI WALTER',s:['RIP','R10','R10','R10','R10','R10','RIP']},
+    {pos:38,name:'TRINCHI VINCENZO',s:[151,151,151,151,151,151,'RIP']},
+    {pos:39,name:'BALDINI FABRIZIO',s:[150,150,150,150,150,150,'RIP']},
+    {pos:40,name:'BRACCI GIANLUCA',s:[105,105,105,105,105,105,'RIP']},
+    {pos:41,name:'BERTANELLI MATTEO',s:[106,106,106,106,106,106,'RIP']},
+    {pos:42,name:'BERTANELLI MARCO',s:['R5','R5','R5','R5','R5','R5','RIP']},
+    {pos:43,name:'TERENZONI ALESSANDRO',s:[193,193,193,193,'RIP',193,108]},
+    {pos:44,name:'BIANCHINI MICHELE',s:[162,162,162,'RIP',162,162,'R4']},
+    {pos:45,name:'BOLOGNA FEDERICO MARIA',s:['R6','R6','RIP','R6','R6','R6',113]},
+    {pos:46,name:'BONINI JESSICA',s:[143,'RIP',143,143,143,143,'RIP']},
+    {pos:47,name:'GRANAI FABIO',s:[152,152,152,152,152,152,'RIP']},
+    {pos:48,name:'CARLINI MARCO',s:[113,113,113,113,113,113,'RIP']},
+    {pos:49,name:'STURLI ANDREA',s:[120,120,120,120,120,120,'RIP']},
+    {pos:50,name:'MASSARI TIZIANO',s:['R8','R8','R8','R8','R8','R8','RIP']},
+    {pos:51,name:'BIANCHIN MARCO',s:[167,167,167,167,167,167,'RIP']},
+    {pos:52,name:'(riga 52)',s:[130,130,130,130,130,'RIP',115]},
+    {pos:53,name:'(riga 53)',s:['R2','R2','R2','RIP','R2','R2',130]},
+    {pos:54,name:'(riga 54)',s:[104,'RIP',104,104,104,104,'R5']},
+  ],
+  CTTnord: [
+    {pos:1,name:'CECIRE VITO MARIA',s:['RIP',109,109,109,109,109,'RIP']},
+    {pos:2,name:'MARCHI RENATO',s:['R5','R5','R5','R5','R5','R5','RIP']},
+    {pos:3,name:'MENCONI SIMONE',s:[102,102,102,102,102,102,'RIP']},
+    {pos:4,name:'DITTA ANDREA',s:[159,159,159,159,159,159,'RIP']},
+    {pos:5,name:'NARDINI ALBERTO',s:['R1','R10','R10',108,160,168,'RIP']},
+    {pos:6,name:'(riga 6)',s:[127,127,127,127,127,127,'RIP']},
+    {pos:7,name:'PIERETTI FEDERICO',s:[168,168,168,168,168,'RIP',109]},
+    {pos:8,name:'ZANOVELLO ANTONIO',s:[171,171,171,171,'RIP',171,'R3']},
+    {pos:9,name:'MANUCCI ANTONIO',s:[108,108,108,'RIP',108,108,134]},
+    {pos:10,name:'SCARSINI FABIO',s:['RIP','R1','R1','R1','R1','R1','RIP']},
+    {pos:11,name:'SIMEONE PIETRO',s:[146,146,146,146,146,146,'RIP']},
+    {pos:12,name:'VITALONI NICOLA',s:[115,115,115,115,115,115,'RIP']},
+    {pos:13,name:'USTIONI GIOVANNA',s:[132,132,132,132,132,132,'RIP']},
+    {pos:14,name:'VANGELI PAOLO',s:[175,175,175,175,175,175,'RIP']},
+    {pos:15,name:'VEZZANI DONATELLA',s:['R8','R8','R8','R8','R8','R8','RIP']},
+    {pos:16,name:'VITALI RICCARDO',s:[109,110,161,181,'RIP',177,110]},
+    {pos:17,name:'ALBERTI ROSSANO',s:[149,149,149,'RIP',149,149,'R5']},
+    {pos:18,name:'(riga 18)',s:['R6','R6','RIP','R6','R6','R6',107]},
+    {pos:19,name:'ANGELINI NICOLA',s:[101,'RIP',101,101,101,101,'RIP']},
+    {pos:20,name:"BERTELA' SIMONE",s:[158,158,158,158,158,158,'RIP']},
+    {pos:21,name:'BOCCIA LUCIA',s:[148,101,'R6',149,171,'R10','RIP']},
+    {pos:22,name:'BONTEMPO MIRCO',s:['R2','R2','R2','R2','R2','R2','RIP']},
+    {pos:23,name:"D'AMBROSIO SALVATORE",s:[116,116,116,116,116,116,'RIP']},
+    {pos:24,name:'BUGLIANI CARLO',s:['R7','R7','R7','R7','R7','R7','RIP']},
+    {pos:25,name:'COLORETTI RUDY',s:[177,177,177,177,177,'RIP','R1']},
+    {pos:26,name:'CONTI GIANLUCA',s:['R9','R9','R9','R9','RIP','R9','R4']},
+    {pos:27,name:'CORROTTI LARRY',s:[161,161,'RIP',161,161,161,136]},
+    {pos:28,name:'DE ANGELI LEONARDO',s:['RIP',148,149,148,148,148,'RIP']},
+    {pos:29,name:'FEBRUARI MASSIMO',s:['R3','R3','R3','R3','R3','R3','RIP']},
+    {pos:30,name:'FIORAVANTI TIZIANO',s:[135,135,135,135,135,135,'RIP']},
+    {pos:31,name:'GIUNTI GIANNI',s:[164,164,164,164,164,164,'RIP']},
+    {pos:32,name:'GNETTI CRISTIAN',s:[141,141,141,141,141,141,'RIP']},
+    {pos:33,name:'IRPO GIUSEPPE',s:['R4','R4','R4','R4','R4','R4','RIP']},
+    {pos:34,name:'LAZZAROTTI GIUSEPPE',s:[160,160,160,160,'RIP',160,102]},
+    {pos:35,name:'LORENZELLI FRANCESCO',s:[181,181,181,'RIP',181,181,'R2']},
+    {pos:36,name:'LORENZETTI ANGELA',s:[110,'RIP',110,110,110,110,124]},
+  ],
+  AT: [
+    {pos:1,name:'LAVELLI ANDREA',s:['RIP',172,172,172,172,172,'RIP']},
+    {pos:2,name:"D'ATRI GIUSEPPE",s:[185,189,'R2',121,169,'R4','RIP']},
+    {pos:3,name:'ROSSI GRAZIANO',s:[134,134,134,134,134,134,'RIP']},
+    {pos:4,name:'SIMEONE CARMELA',s:[195,195,195,195,195,195,'RIP']},
+    {pos:5,name:'SISTI DAVIDE',s:['R10','R10','R10','R10','R10','R10','RIP']},
+    {pos:6,name:"TURRA' PIETRO",s:[125,125,125,125,125,125,'RIP']},
+    {pos:7,name:'VALERI DAVIDE',s:['R5','R5','R5','R5','R5','RIP','R1']},
+    {pos:8,name:'VENERUSO CELESTINO',s:[142,142,142,142,'RIP',142,'R6']},
+    {pos:9,name:'ZOPPI ALESSANDRO',s:[121,121,121,'RIP',121,121,132]},
+    {pos:10,name:'BENEDINI ANDREA',s:['RIP',118,118,118,118,118,'RIP']},
+    {pos:11,name:'VOLPI MARCO',s:['R1','R1','R1','R1','R1','R1','RIP']},
+    {pos:12,name:'COMELLI RONNY',s:[174,174,174,174,174,174,'RIP']},
+    {pos:13,name:'GIROMINI MANUEL',s:[145,145,145,145,145,145,'RIP']},
+    {pos:14,name:"TOMA' STEFANO",s:[156,156,156,156,156,156,'RIP']},
+    {pos:15,name:'DE BIASI THOMAS',s:[129,129,129,129,129,129,'RIP']},
+    {pos:16,name:'(riga 16)',s:['R8','R8','R8','R8','RIP','R8','R2']},
+    {pos:17,name:'BERTELLONI PAOLO',s:[163,163,163,'RIP',163,163,103]},
+    {pos:18,name:'LEZZA GIANLUIGI',s:['R2','R2','RIP','R2','R2','R2',112]},
+    {pos:19,name:'TITOIU CATALIN CLAUDIU',s:[172,'RIP','R11',122,142,'R7','RIP']},
+    {pos:20,name:'DI SCIULLO FEDERICO',s:[117,117,117,117,117,117,'RIP']},
+    {pos:21,name:'ANDREAZZOLI ALESSANDRO',s:['R6','R6','R6','R6','R6','R6','RIP']},
+    {pos:22,name:'DELLA PERUTA PAOLO',s:[154,154,154,154,154,154,'RIP']},
+    {pos:23,name:'DIAMANTI SILVANO',s:[118,'R11','R9',163,'R8','R5','RIP']},
+    {pos:24,name:'ACCARDO CLAUDIO',s:[155,155,155,155,155,155,'RIP']},
+    {pos:25,name:'AMATO TOMMASO',s:['R7','R7','R7','R7','R7','RIP','R4']},
+    {pos:26,name:'BALLONI IVANE',s:[169,169,169,169,'RIP',169,'R5']},
+    {pos:27,name:'BARATTINI MARCO',s:['R9','R9','RIP','R9','R9','R9',111]},
+    {pos:28,name:'BASCHERINI FABIO',s:['RIP',185,185,185,185,185,'RIP']},
+    {pos:29,name:'FRANCHI LUIGI',s:[166,166,166,166,166,166,'RIP']},
+    {pos:30,name:'BERTI ALBINO',s:['R3','R3','R3','R3','R3','R3','RIP']},
+    {pos:31,name:'GEREVINI MORENO',s:[179,179,179,179,179,179,'RIP']},
+    {pos:32,name:'GUAZZELLI LUCA',s:[136,136,136,136,136,136,'RIP']},
+    {pos:33,name:'GUIDALI ANNALISA',s:[191,191,191,191,191,191,'RIP']},
+    {pos:34,name:'IRIONE VITTORIO',s:['R4','R4','R4','R4','R4','RIP',118]},
+    {pos:35,name:"KLUSKOVA' NIKOLA",s:[122,122,122,'RIP',122,122,'R3']},
+    {pos:36,name:'BERTOLONI MARCO',s:[189,'RIP',189,189,189,189,114]},
+  ]
+};
+
+/* ── Helpers ── */
+function getMonday(d){const date=new Date(d);date.setHours(0,0,0,0);const day=date.getDay();date.setDate(date.getDate()+(day===0?-6:1-day));return date;}
+function weekOffset(m){return Math.round((m-START_MONDAY)/(7*24*60*60*1000));}
+function getRow(g,pos,wo){const rot=ROTATIONS[g];const idx=((pos-1)+wo)%rot.length;return rot[(idx+rot.length)%rot.length];}
+function shiftClass(v){if(!v||v==='RIP')return'riposo';const s=String(v);if(s.startsWith('R')){const n=parseInt(s.slice(1));return n<=3?'rep-mat':'rep-pom';}return parseInt(s)%2===0?'pomeriggio':'mattina';}
+function shiftLabel(v){if(!v||v==='RIP')return'Riposo';const s=String(v);if(s.startsWith('R')){const n=parseInt(s.slice(1));return n<=3?'Rep. Mattina':'Rep. Pom.';}return parseInt(s)%2===0?'Pomeriggio':'Mattina';}
+function fmt(d){return d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});}
+
+/* ── Tab switch ── */
+function switchTab(id,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+/* ── Worker list ── */
+function updateWorkerList(){
+  const group=document.getElementById('s-group').value;
+  const sel=document.getElementById('s-worker');
+  const prev=sel.value;
+  sel.innerHTML='<option value="">Seleziona...</option>';
+  const groups=group?[group]:Object.keys(ROTATIONS);
+  const workers=[];
+  groups.forEach(g=>ROTATIONS[g].forEach(r=>{if(!r.name.startsWith('('))workers.push({label:r.name,group:g,pos:r.pos});}));
+  workers.sort((a,b)=>a.label.localeCompare(b.label)).forEach(w=>{
+    const o=document.createElement('option');
+    o.value=JSON.stringify({group:w.group,pos:w.pos});
+    o.textContent=w.label+(group?'':` [${w.group}]`);
+    if(o.value===prev)o.selected=true;
+    sel.appendChild(o);
+  });
+}
+
+/* ── Cerca Turno per Numero ── */
+function searchTurnoNum(){
+  const numStr = document.getElementById('ct-num').value.trim();
+  const dv = document.getElementById('ct-date').value;
+  if(!numStr){alert('Inserisci un numero di turno');return;}
+  if(!dv){alert('Seleziona una settimana');return;}
+
+  const turnoNum = parseInt(numStr);
+  const group = document.getElementById('ct-group').value;
+  const monday = getMonday(new Date(dv));
+  const wo = weekOffset(monday);
+  const groups = group ? [group] : Object.keys(ROTATIONS);
+
+  // Find all workers who have this turno number in any day this week
+  const results = [];
+  groups.forEach(g => {
+    ROTATIONS[g].forEach(r => {
+      if(r.name.startsWith('(')) return;
+      const row = getRow(g, r.pos, wo);
+      const matchDays = [];
+      row.s.forEach((shift, di) => {
+        if(String(shift) === String(turnoNum)) matchDays.push(di);
+      });
+      if(matchDays.length > 0) results.push({name: r.name, group: g, days: matchDays, row: row.pos});
+    });
+  });
+
+  // Sort alphabetically
+  results.sort((a,b) => a.name.localeCompare(b.name));
+
+  const cls = shiftClass(turnoNum);
+  const lbl = shiftLabel(turnoNum);
+  const pillColors = {
+    mattina:   {bg:'rgba(79,158,255,.15)',  color:'var(--mattina)'},
+    pomeriggio:{bg:'rgba(255,107,74,.15)',  color:'var(--pomeriggio)'},
+    'rep-mat': {bg:'rgba(167,139,250,.15)', color:'var(--rep-mat)'},
+    'rep-pom': {bg:'rgba(251,146,60,.15)',  color:'var(--rep-pom)'},
+    riposo:    {bg:'rgba(58,63,82,.4)',     color:'var(--text2)'},
+  };
+  const pc = pillColors[cls] || pillColors.riposo;
+
+  let html = `<div class="result-section">
+    <div class="turno-result-header">
+      <div class="turno-num-badge" style="border-color:${pc.color}">
+        <span class="tnb-label">Turno</span>
+        <span style="color:${pc.color}">${turnoNum}</span>
+        <span class="tnb-type" style="color:${pc.color}">${lbl}</span>
+      </div>
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:.85rem;color:var(--text2)">Settimana del <strong style="color:var(--text)">${fmt(monday)}</strong></div>
+        <div style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--text2);margin-top:.3rem">${results.length} lavorator${results.length===1?'e':'i'} con questo turno</div>
+      </div>
+    </div>`;
+
+  if(results.length === 0){
+    html += `<div class="empty-state" style="padding:2rem"><div class="icon">🔍</div><p>Nessun lavoratore ha il turno <strong>${turnoNum}</strong> questa settimana</p></div>`;
+  } else {
+    html += `<div class="cerca-turno-list">`;
+    results.forEach(r => {
+      html += `<div class="ct-row">
+        <div>
+          <div class="ct-worker">${r.name}</div>
+          <div class="ct-group">${r.group} &nbsp;·&nbsp; riga ${r.row}</div>
+        </div>
+        <div class="ct-days">`;
+      r.days.forEach(di => {
+        html += `<div class="ct-day-pill" style="background:${pc.bg};color:${pc.color}">${DAYS[di]}</div>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `</div>`;
+  document.getElementById('r-cercaturno').innerHTML = html;
+}
+
+/* ── Cerca lavoratore ── */
+function searchWorker(){
+  const val=document.getElementById('s-worker').value;
+  if(!val){alert('Seleziona un lavoratore');return;}
+  const {group,pos}=JSON.parse(val);
+  const numW=parseInt(document.getElementById('s-weeks').value)||8;
+  const fromDate=document.getElementById('s-from').value?new Date(document.getElementById('s-from').value):new Date();
+  const startMon=getMonday(fromDate);
+  const wo0=weekOffset(startMon);
+  const todayMon=getMonday(new Date());
+  const worker=ROTATIONS[group].find(r=>r.pos===pos);
+  const isClaudio=worker.name==='ACCARDO CLAUDIO';
+
+  let html=`<div class="result-section"><div class="worker-badge"><div class="worker-code">${worker.name}</div><div class="worker-info">Gruppo: <strong>${group}</strong> &nbsp;·&nbsp; Pos. iniziale: riga <strong>${pos}</strong> &nbsp;·&nbsp; Totale righe: <strong>${ROTATIONS[group].length}</strong></div></div><div class="weeks-grid">`;
+
+  for(let w=0;w<numW;w++){
+    const wMon=new Date(startMon);wMon.setDate(wMon.getDate()+w*7);
+    const wo=wo0+w;
+    const row=getRow(group,pos,wo);
+    const isCurrent=wMon.getTime()===todayMon.getTime();
+    html+=`<div class="week-row${isCurrent?' current-week':''}${isCurrent&&isClaudio?' claudio-hl':''}">`;
+    html+=`<div class="week-label"><strong>Settimana ${w+1}${isCurrent?'<span class="current-badge">ORA</span>':''}</strong>${fmt(wMon)}</div>`;
+    html+=`<div class="week-position"><span class="pos-num">${row.pos}</span>riga</div>`;
+    html+=`<div class="days-row">`;
+    DAYS.forEach((day,di)=>{const shift=row.s[di];const cls=shiftClass(shift);html+=`<div class="day-cell shift-${cls}"><span class="day-name">${day}</span><span class="day-shift">${shift}</span></div>`;});
+    html+=`</div></div>`;
+  }
+  html+=`</div></div>`;
+  document.getElementById('r-cerca').innerHTML=html;
+}
+
+/* ── Turno del Giorno ── */
+let _giornoFilter = 'all';
+
+function showGiornoView(filterOverride){
+  const dv = document.getElementById('g-date').value;
+  if(!dv){alert('Seleziona un giorno');return;}
+
+  const group = document.getElementById('g-group').value;
+  const date = new Date(dv);
+  date.setHours(0,0,0,0);
+
+  // day of week index (0=LUN … 6=DOM)
+  const jsDay = date.getDay(); // 0=Sun,1=Mon…
+  const dayIdx = jsDay === 0 ? 6 : jsDay - 1;
+
+  const monday = getMonday(date);
+  const wo = weekOffset(monday);
+  const groups = group ? [group] : Object.keys(ROTATIONS);
+
+  // Collect all workers for this day
+  const all = [];
+  groups.forEach(g => {
+    ROTATIONS[g].forEach(r => {
+      if(r.name.startsWith('(')) return;
+      const row = getRow(g, r.pos, wo);
+      const shift = row.s[dayIdx];
+      const cls = shiftClass(shift);
+      all.push({name: r.name, group: g, shift: shift || 'RIP', cls});
+    });
+  });
+
+  // Sort alphabetically
+  all.sort((a,b) => a.name.localeCompare(b.name));
+
+  // Counts
+  const counts = {mattina:0, pomeriggio:0, 'rep-mat':0, 'rep-pom':0, riposo:0};
+  all.forEach(w => counts[w.cls] = (counts[w.cls]||0)+1);
+
+  const activeFilter = filterOverride || _giornoFilter;
+  _giornoFilter = activeFilter;
+
+  const filtered = activeFilter === 'all' ? all : all.filter(w => w.cls === activeFilter);
+
+  const dayNameFull = DAY_NAMES_FULL[dayIdx];
+  const isToday = date.toDateString() === new Date().toDateString();
+
+  const pillColors = {
+    mattina:   {bg:'rgba(79,158,255,.15)',  color:'var(--mattina)'},
+    pomeriggio:{bg:'rgba(255,107,74,.15)',  color:'var(--pomeriggio)'},
+    'rep-mat': {bg:'rgba(167,139,250,.15)', color:'var(--rep-mat)'},
+    'rep-pom': {bg:'rgba(251,146,60,.15)',  color:'var(--rep-pom)'},
+    riposo:    {bg:'rgba(58,63,82,.4)',     color:'var(--text2)'},
+  };
+
+  const filterLabels = {
+    all:       `Tutti (${all.length})`,
+    mattina:   `🌅 Mattina (${counts.mattina})`,
+    pomeriggio:`🌆 Pomeriggio (${counts.pomeriggio})`,
+    'rep-mat': `🔶 Rep. Mat. (${counts['rep-mat']})`,
+    'rep-pom': `🔷 Rep. Pom. (${counts['rep-pom']})`,
+    riposo:    `💤 Riposo (${counts.riposo})`,
+  };
+
+  let html = `<div class="result-section">
+    <div class="giorno-header">
+      <div class="giorno-date-badge">
+        <div class="gdb-day">${date.toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'})}${isToday?' <span class="current-badge">OGGI</span>':''}</div>
+        <div class="gdb-label">${dayNameFull}</div>
+      </div>
+      <div class="giorno-totals">`;
+
+  Object.entries(pillColors).forEach(([k,v]) => {
+    if(!counts[k]) return;
+    const labels = {mattina:'Mattina',pomeriggio:'Pomeriggio','rep-mat':'Rep. Mat.','rep-pom':'Rep. Pom.',riposo:'Riposo'};
+    html += `<div class="giorno-pill" style="background:${v.bg};color:${v.color};border-color:${v.color}">${labels[k]}: <strong>${counts[k]}</strong></div>`;
+  });
+
+  html += `</div></div>
+
+    <div class="giorno-filter-tabs">`;
+
+  Object.entries(filterLabels).forEach(([k,lbl]) => {
+    const cls = k === 'all' ? 'all' : k;
+    html += `<button class="gf-tab ${activeFilter===k?'active '+cls:''}" onclick="showGiornoView('${k}')">${lbl}</button>`;
+  });
+
+  html += `</div>`;
+
+  if(filtered.length === 0){
+    html += `<div class="empty-state" style="padding:2rem"><div class="icon">🔍</div><p>Nessun lavoratore con questo filtro</p></div>`;
+  } else {
+    html += `<div class="giorno-list">`;
+    filtered.forEach(w => {
+      const p = pillColors[w.cls] || pillColors.riposo;
+      html += `<div class="giorno-row">
+        <div>
+          <div class="giorno-worker">${w.name}</div>
+          <div class="giorno-group">${w.group}</div>
+        </div>
+        <div class="giorno-code" style="color:var(--text2)">${w.shift}</div>
+        <div class="giorno-shift-badge ${w.cls}" style="background:${p.bg};color:${p.color}">${shiftLabel(w.shift)}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `</div>`;
+  document.getElementById('r-giorno').innerHTML = html;
+}
+
+/* ── Vista Settimana ── */
+function showWeekView(){
+  const dv=document.getElementById('w-date').value;
+  if(!dv){alert('Seleziona una data');return;}
+  const group=document.getElementById('w-group').value;
+  const monday=getMonday(new Date(dv));
+  const wo=weekOffset(monday);
+  const groups=group?[group]:Object.keys(ROTATIONS);
+
+  let html=`<div class="result-section"><p style="font-family:'DM Mono',monospace;font-size:.85rem;color:var(--text2);margin-bottom:1.2rem">Settimana del ${fmt(monday)}</p>`;
+  groups.forEach(g=>{
+    html+=`<div class="group-section"><div class="group-title">${g}</div><div class="weekly-grid">`;
+    DAYS.forEach((day,di)=>{
+      const isWE=di>=5;
+      html+=`<div class="day-column"><div class="day-header${isWE?' weekend':''}">${day}</div><div class="shift-list">`;
+      ROTATIONS[g].forEach((r)=>{
+        const row=getRow(g,r.pos,wo);
+        const shift=row.s[di];
+        if(!shift||shift==='RIP')return;
+        const cls=shiftClass(shift);
+        html+=`<div class="shift-item ${cls}"><span class="worker-name">${r.name}</span><span class="shift-type">${shift} · ${shiftLabel(shift)}</span></div>`;
+      });
+      html+=`</div></div>`;
+    });
+    html+=`</div></div>`;
+  });
+  html+=`</div>`;
+  document.getElementById('r-week').innerHTML=html;
+}
+
+/* ── Panoramica ── */
+function showOverview(){
+  const dv=document.getElementById('o-date').value;
+  if(!dv){alert('Seleziona una data');return;}
+  const monday=getMonday(new Date(dv));
+  const wo=weekOffset(monday);
+  let mat=0,pom=0,rip=0,rep=0;
+  Object.keys(ROTATIONS).forEach(g=>ROTATIONS[g].forEach((r)=>{const row=getRow(g,r.pos,wo);row.s.forEach(sh=>{const c=shiftClass(sh);if(c==='mattina')mat++;else if(c==='pomeriggio')pom++;else if(c==='riposo')rip++;else rep++;});}));
+  document.getElementById('o-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Turni Mattina</div><div class="stat-value" style="color:var(--mattina)">${mat}</div></div>
+    <div class="stat-card"><div class="stat-label">Turni Pomeriggio</div><div class="stat-value" style="color:var(--pomeriggio)">${pom}</div></div>
+    <div class="stat-card"><div class="stat-label">Reperibilità</div><div class="stat-value" style="color:var(--rep-mat)">${rep}</div></div>
+    <div class="stat-card"><div class="stat-label">Giorni Riposo</div><div class="stat-value" style="color:var(--text2)">${rip}</div></div>`;
+
+  let html=`<div class="result-section">`;
+  Object.keys(ROTATIONS).forEach(g=>{
+    html+=`<div class="group-section"><div class="group-title">${g} — ${ROTATIONS[g].length} lavoratori</div><div class="weeks-grid">`;
+    ROTATIONS[g].forEach((r)=>{
+      const row=getRow(g,r.pos,wo);
+      html+=`<div class="week-row"><div class="week-label"><strong>${r.name}</strong><span style="font-size:.7rem;color:var(--text2);display:block">→ riga ${row.pos}</span></div><div></div><div class="days-row">`;
+      DAYS.forEach((day,di)=>{const shift=row.s[di];const cls=shiftClass(shift);html+=`<div class="day-cell shift-${cls}"><span class="day-name">${day}</span><span class="day-shift">${shift||'RIP'}</span></div>`;});
+      html+=`</div></div>`;
+    });
+    html+=`</div></div>`;
+  });
+  html+=`</div>`;
+  document.getElementById('r-overview').innerHTML=html;
+}
+
+/* ── Mattina/Pomeriggio ── */
+function showTurnoView(){
+  const dv=document.getElementById('t-date').value;
+  if(!dv){alert('Seleziona una data');return;}
+  const tipo=document.getElementById('t-type').value;
+  const dayFilter=document.getElementById('t-day').value;
+  const group=document.getElementById('t-group').value;
+  const monday=getMonday(new Date(dv));
+  const wo=weekOffset(monday);
+  const groups=group?[group]:Object.keys(ROTATIONS);
+  const dayIdxs=dayFilter===''?[0,1,2,3,4,5,6]:[parseInt(dayFilter)];
+
+  const tipoLabel={'mattina':'🌅 Mattina','pomeriggio':'🌆 Pomeriggio','rep-mat':'🔶 Rep. Mattina','rep-pom':'🔷 Rep. Pom.'};
+  const tipoColor={'mattina':'var(--mattina)','pomeriggio':'var(--pomeriggio)','rep-mat':'var(--rep-mat)','rep-pom':'var(--rep-pom)'};
+
+  const results=[];
+  groups.forEach(g=>{
+    ROTATIONS[g].forEach((r)=>{
+      const row=getRow(g,r.pos,wo);
+      const matchDays=[];
+      dayIdxs.forEach(di=>{
+        const shift=row.s[di];
+        if(shiftClass(shift)===tipo) matchDays.push({day:DAYS[di],shift});
+      });
+      if(matchDays.length>0) results.push({name:r.name,group:g,days:matchDays});
+    });
+  });
+
+  const dayLabel=dayFilter===''?'tutta la settimana':DAY_NAMES_FULL[parseInt(dayFilter)];
+
+  let html=`<div class="result-section">
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap">
+      <div style="font-family:'DM Mono',monospace;font-size:.85rem;color:var(--text2)">Settimana del <strong style="color:var(--text)">${fmt(monday)}</strong> — ${dayLabel}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:.8rem;color:${tipoColor[tipo]};background:${tipoColor[tipo].replace(')',',0.1)').replace('var(','rgba(').replace('--mattina','79,158,255').replace('--pomeriggio','255,107,74').replace('--rep-mat','167,139,250').replace('--rep-pom','251,146,60')};padding:.3rem .8rem;border-radius:20px;border:1px solid ${tipoColor[tipo]}">${tipoLabel[tipo]}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--text2)">${results.length} lavoratori trovati</div>
+    </div>`;
+
+  if(results.length===0){
+    html+=`<div class="no-results" style="text-align:center;padding:3rem;color:var(--text2);font-family:'DM Mono',monospace">Nessun lavoratore con questo tipo di turno</div>`;
+  } else {
+    const byGroup={};
+    results.forEach(r=>{if(!byGroup[r.group])byGroup[r.group]=[];byGroup[r.group].push(r);});
+    Object.keys(byGroup).forEach(g=>{
+      html+=`<div class="group-section"><div class="group-title">${g} — ${byGroup[g].length} lavoratori</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.6rem">`;
+      byGroup[g].forEach(r=>{
+        html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.8rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem">
+          <div style="font-family:'DM Mono',monospace;font-size:.82rem;color:var(--text);font-weight:500">${r.name}</div>
+          <div style="display:flex;gap:.3rem;flex-wrap:wrap;justify-content:flex-end">`;
+        r.days.forEach(d=>{
+          html+=`<div style="font-family:'DM Mono',monospace;font-size:.68rem;background:${tipoColor[tipo].replace(')',',0.12)').replace('var(','rgba(').replace('--mattina','79,158,255').replace('--pomeriggio','255,107,74').replace('--rep-mat','167,139,250').replace('--rep-pom','251,146,60')};color:${tipoColor[tipo]};padding:.2rem .5rem;border-radius:6px">${d.day} · ${d.shift}</div>`;
+        });
+        html+=`</div></div>`;
+      });
+      html+=`</div></div>`;
+    });
+  }
+  html+=`</div>`;
+  document.getElementById('r-turno').innerHTML=html;
+}
+
+/* ── Init ── */
+function init(){
+  const today=new Date();
+  document.getElementById('today-label').textContent=today.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const wo=weekOffset(getMonday(today));
+  document.getElementById('week-info').textContent=`Settimana ${wo+1} della rotazione`;
+  const ts=today.toISOString().split('T')[0];
+  document.getElementById('s-from').value=ts;
+  document.getElementById('t-date').value=ts;
+  document.getElementById('w-date').value=ts;
+  document.getElementById('o-date').value=ts;
+  document.getElementById('g-date').value=ts;
+  document.getElementById('ct-date').value=ts;
+  document.getElementById('s-group').value='AT';
+  updateWorkerList();
+  const sel=document.getElementById('s-worker');
+  for(let o of sel.options){try{if(JSON.parse(o.value).pos===24){o.selected=true;break;}}catch(e){}}
+}
+init();
+</script>
+
+</body>
+</html>
