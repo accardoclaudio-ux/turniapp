@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 
 <html lang="it">
@@ -123,6 +125,19 @@
 .ct-group{font-family:‘DM Mono’,monospace;font-size:.65rem;color:var(–text2);margin-top:.15rem;}
 .ct-days{display:flex;gap:.3rem;flex-wrap:wrap;justify-content:flex-end;}
 .ct-day-pill{font-family:‘DM Mono’,monospace;font-size:.68rem;padding:.2rem .55rem;border-radius:6px;}
+
+/* ── Cerca Servizio ── */
+.sv-card{background:var(–surface);border:1px solid var(–border);border-radius:10px;padding:.9rem 1.2rem;margin-bottom:.5rem;transition:background .15s;}
+.sv-card:hover{background:var(–surface2);}
+.sv-card-header{display:flex;align-items:center;gap:1rem;margin-bottom:.6rem;flex-wrap:wrap;}
+.sv-num{font-family:‘DM Mono’,monospace;font-size:1.1rem;font-weight:700;color:var(–accent);}
+.sv-tipo{font-family:‘DM Mono’,monospace;font-size:.68rem;padding:.2rem .6rem;border-radius:20px;background:rgba(79,158,255,.12);color:var(–accent);border:1px solid var(–accent);}
+.sv-orari{font-family:‘DM Mono’,monospace;font-size:.78rem;color:var(–text2);}
+.sv-orari strong{color:var(–text);}
+.sv-linee{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.4rem;}
+.sv-linea{font-family:‘DM Mono’,monospace;font-size:.65rem;padding:.15rem .5rem;border-radius:5px;background:var(–surface2);color:var(–text2);border:1px solid var(–border);}
+.sv-note{font-family:‘DM Mono’,monospace;font-size:.62rem;color:var(–accent2);margin-top:.3rem;}
+.sv-results-count{font-family:‘DM Mono’,monospace;font-size:.8rem;color:var(–text2);margin-bottom:1rem;}
 </style>
 
 </head>
@@ -146,6 +161,7 @@
     <button class="tab" onclick="switchTab('turno',this)">🌅 Mattina / Pomeriggio</button>
     <button class="tab" onclick="switchTab('settimanale',this)">📅 Vista Settimana</button>
     <button class="tab" onclick="switchTab('panoramica',this)">📊 Panoramica</button>
+    <button class="tab" onclick="switchTab('servizi',this)">🚌 Cerca Servizio</button>
   </div>
 
   <!-- TAB: Cerca Lavoratore -->
@@ -312,6 +328,75 @@
     </div>
     <div class="stats-row" id="o-stats"></div>
     <div id="r-overview"><div class="empty-state"><div class="icon">📊</div><p>Seleziona una data per la panoramica completa</p></div></div>
+  </div>
+
+  <!-- TAB: Cerca Servizio -->
+
+  <div class="panel" id="panel-servizi">
+
+```
+<!-- Selettore Mattinale / Pomeridiano -->
+<div style="display:flex;gap:.5rem;margin-bottom:1.5rem">
+  <button id="sv-btn-mat" class="sv-cat-btn active-mat" onclick="setSvCat('mat')"
+    style="padding:.55rem 1.4rem;border-radius:8px;border:2px solid var(--mattina);background:rgba(79,158,255,.15);color:var(--mattina);font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s">
+    ☀️ Mattinali (nr. dispari)
+  </button>
+  <button id="sv-btn-pom" class="sv-cat-btn" onclick="setSvCat('pom')"
+    style="padding:.55rem 1.4rem;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--text2);font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s">
+    🌆 Pomeridiani (nr. pari)
+  </button>
+  <button id="sv-btn-tutti" class="sv-cat-btn" onclick="setSvCat('tutti')"
+    style="padding:.55rem 1.4rem;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--text2);font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s">
+    🔀 Tutti
+  </button>
+</div>
+
+<div class="search-row">
+  <div class="field">
+    <label>Linea (es. 52, 70)</label>
+    <input type="text" id="sv-linea" placeholder="es. 52" style="min-width:120px"/>
+  </div>
+  <div class="field">
+    <label>Inizio turno da</label>
+    <input type="time" id="sv-inizio-min" style="min-width:130px"/>
+  </div>
+  <div class="field">
+    <label>Fine turno entro</label>
+    <input type="time" id="sv-orario" style="min-width:130px"/>
+  </div>
+  <div class="field">
+    <label>Tipologia</label>
+    <select id="sv-tipo" style="min-width:160px">
+      <option value="">Tutte</option>
+      <option value="CTT_UM">CTT_UM</option>
+      <option value="CTT_EP">CTT_EP</option>
+      <option value="CTT_EM">CTT_EM</option>
+      <option value="CTT_OU">CTT_OU</option>
+      <option value="MS_UNm">MS_UNm</option>
+      <option value="MS_UNp">MS_UNp</option>
+      <option value="MS_UNmp">MS_UNmp</option>
+      <option value="MS_UUm">MS_UUm</option>
+      <option value="MS_UUp">MS_UUp</option>
+      <option value="MS_UUs">MS_UUs</option>
+      <option value="AT_UFT">AT_UFT</option>
+      <option value="AT_Nast">AT_Nast</option>
+    </select>
+  </div>
+  <div class="field" style="justify-content:flex-end">
+    <button class="btn" onclick="searchServizi()">Cerca</button>
+  </div>
+</div>
+
+<!-- Legenda categoria attiva -->
+<div id="sv-cat-info" style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--text2);margin-bottom:1.2rem;padding:.4rem .8rem;background:var(--surface);border-radius:6px;border:1px solid var(--border)">
+  ☀️ <strong style="color:var(--mattina)">Mattinali</strong> — turni con numero dispari (MS101, MS103, MS105…) · il filtro orario agisce sulla <strong>fine turno</strong>
+</div>
+
+<div id="r-servizi">
+  <div class="empty-state"><div class="icon">🚌</div><p>Seleziona la categoria e imposta i filtri — copertura completa MS101–MS195</p></div>
+</div>
+```
+
   </div>
 </div>
 
@@ -824,6 +909,645 @@ function showTurnoView(){
   }
   html+=`</div>`;
   document.getElementById('r-turno').innerHTML=html;
+}
+
+/* ══════════════════════════════════════════════
+   DATABASE TURNI SERVIZIO (MS101 – MS125)
+   Fonte: TG_Catagnina_feriali_scolastici_dal_07-01-2026.pdf
+   ══════════════════════════════════════════════ */
+const TURNI_SERVIZIO = [
+  {
+    num:'MS101', tipo:'CTT_UM', inizio:'06:03', fine:'13:45',
+    note:'Feriale',
+    linee:['L70','L48','L71','L49'],
+    desc:'L70 Via Parma↔Carrara Osp, L48/L49 Torano/Miseglia, L71 Carrara→XX Settembre'
+  },
+  {
+    num:'MS102', tipo:'CTT_EP', inizio:'12:55', fine:'20:01',
+    note:'Feriale',
+    linee:['L61','L75','L82'],
+    desc:'L61 Massa FS↔Osp.Apuane, L75 Massa Via Europa↔Carrara Osp, L82 Carrara↔Casano'
+  },
+  {
+    num:'MS103', tipo:'MS_UUm', inizio:'05:00', fine:'12:00',
+    note:'Feriale',
+    linee:[],
+    desc:'Disposizione Catagnina 05:00–12:00'
+  },
+  {
+    num:'MS104', tipo:'MS_UUp', inizio:'12:56', fine:'20:50',
+    note:'Feriale (versione Sabato disponibile)',
+    linee:['L68','L77','L65','L78','L67'],
+    desc:'L68 Massa FS↔Crocello/Cinquale, L77 Alberghiero, L65 Biforco, L78 Resceto, L67 Bergiola Maggiore'
+  },
+  {
+    num:'MS105', tipo:'MS_UNmp', inizio:'05:53', fine:'15:33',
+    note:'Feriale',
+    linee:['L52','L78'],
+    desc:'L52 Carrara Osp↔Fossa Maestra, L78 Massa FS↔Resceto'
+  },
+  {
+    num:'MS106', tipo:'MS_UNp', inizio:'13:48', fine:'20:49',
+    note:'Feriale',
+    linee:['L68','L70'],
+    desc:'L68 Massa FS↔Cinquale, L70 Carrara Osp↔Via Parma/Via Genova'
+  },
+  {
+    num:'MS107', tipo:'MS_UNm', inizio:'06:41', fine:'14:28',
+    note:'Feriale',
+    linee:['L77','L68','L67','L79'],
+    desc:'L77 Massa Via Europa↔Due Madonne, L68 Cinquale, L67 Castagnara/Bergiola, L79 Casette'
+  },
+  {
+    num:'MS108', tipo:'CTT_EP', inizio:'12:37', fine:'20:33',
+    note:'Feriale',
+    linee:['L17','L82','L70','L52'],
+    desc:'L17 Carrara↔Sarzana, L82 Casano, L70 Via Parma, L52 Marinella/Fossa Maestra'
+  },
+  {
+    num:'MS109', tipo:'CTT_UM', inizio:'06:30', fine:'14:23',
+    note:'Feriale',
+    linee:['L62','L107'],
+    desc:'L62 Massa FS↔Cinquale, L107 San Martino↔Via VII Luglio Comune'
+  },
+  {
+    num:'MS110', tipo:'CTT_EP', inizio:'12:54', fine:'20:23',
+    note:'Feriale',
+    linee:['L77','L74','L39','L72','L47'],
+    desc:'L77 Carducci, L74 Massa↔Carrara, L39 Fosdinovo/Castelpoggio, L72 Avenza, L47 Sorgnano'
+  },
+  {
+    num:'MS111', tipo:'MS_UNm', inizio:'05:53', fine:'13:55',
+    note:'Feriale',
+    linee:['L50','L56','L51'],
+    desc:'L50 Carrara↔Bergiola/Bedizzano, L56 Carrara→Massa FS, L51 Carrara↔Osp.Apuane'
+  },
+  {
+    num:'MS112', tipo:'MS_UNp', inizio:'13:06', fine:'20:44',
+    note:'Feriale',
+    linee:['L52','L50'],
+    desc:'L52 Paradiso/Fossa Maestra, L50 Bedizzano/Bergiola'
+  },
+  {
+    num:'MS113', tipo:'MS_UNm', inizio:'05:53', fine:'13:17',
+    note:'Feriale',
+    linee:['L61','L60'],
+    desc:'L61 Massa FS↔Osp.Apuane, L60 Marina di Massa↔Massa FS'
+  },
+  {
+    num:'MS114', tipo:'MS_UNp', inizio:'12:48', fine:'20:40',
+    note:'Feriale',
+    linee:['L50','L52'],
+    desc:'L50 Carrara↔Bergiola/Colonnata, L52 Marinella/Fossa Maestra'
+  },
+  {
+    num:'MS115', tipo:'CTT_OU', inizio:'06:02', fine:'13:12',
+    note:'Feriale',
+    linee:['L75','L65'],
+    desc:'L75 Carrara Osp↔Massa Via Europa, L65 Massa FS↔Biforco'
+  },
+  {
+    num:'MS116', tipo:'CTT_OU', inizio:'13:15', fine:'21:07',
+    note:'Feriale',
+    linee:['L65','L60'],
+    desc:'L65 Biforco, L60 Massa FS↔Marina di Massa'
+  },
+  {
+    num:'MS117', tipo:'AT_UFT', inizio:'06:13', fine:'14:05',
+    note:'Feriale',
+    linee:['L17','L60'],
+    desc:'L17 Massa Via Europa↔Sarzana, L60 Marina di Massa↔Massa FS'
+  },
+  {
+    num:'MS118', tipo:'AT_Nast', inizio:'12:52', fine:'20:12',
+    note:'Feriale',
+    linee:['L52'],
+    desc:'L52 Avenza/Fossa Maestra/Marinella↔Carrara Ospedale'
+  },
+  {
+    num:'MS119', tipo:'MS_UNm', inizio:'06:53', fine:'14:12',
+    note:'Feriale',
+    linee:['L52','L50','L48'],
+    desc:'L52 Fossa Maestra, L50 Colonnata, L48 Torano'
+  },
+  {
+    num:'MS120', tipo:'MS_UNp', inizio:'12:48', fine:'20:45',
+    note:'Feriale',
+    linee:['L50','L39','L49','L74'],
+    desc:'L50 Colonnata, L39 Fosdinovo, L49 Miseglia, L74 Carrara→Massa'
+  },
+  {
+    num:'MS121', tipo:'AT_Nast', inizio:'06:30', fine:'13:30',
+    note:'Feriale',
+    linee:['L52','L70'],
+    desc:'L52 Marinella/Fossa Maestra, L70 Carrara↔Via Parma/Via Genova'
+  },
+  {
+    num:'MS122', tipo:'AT_UFT', inizio:'13:03', fine:'20:16',
+    note:'Feriale',
+    linee:['L52','L70'],
+    desc:'L52 Avenza/Fossa Maestra/Marinella, L70 Carrara↔Via Parma'
+  },
+  {
+    num:'MS123', tipo:'MS_UNm', inizio:'06:05', fine:'14:03',
+    note:'Feriale',
+    linee:['L601','L63','L62','L77'],
+    desc:'L601 Piazza Menconi↔Sarzana, L63 Via Casola, L62 Marina di Massa, L77 Alberghiero'
+  },
+  {
+    num:'MS124', tipo:'MS_UNp', inizio:'12:46', fine:'20:32',
+    note:'Feriale (versione Sabato disponibile)',
+    linee:['L77','L72','L60'],
+    desc:'L77 Due Madonne/Alberghiero, L72 Avenza FS↔Carrara, L60 Marina di Massa'
+  },
+  {
+    num:'MS125', tipo:'AT_UFT', inizio:'06:50', fine:'14:09',
+    note:'Feriale',
+    linee:['L52','L70'],
+    desc:'L52 Fossa Maestra, L70 Carrara↔Via Parma/Via Genova'
+  },
+  {
+    num:'MS126', tipo:'MS_UNp', inizio:'12:43', fine:'18:53',
+    note:'Feriale',
+    linee:['L39','L48','L50','L74'],
+    desc:'L39 Castelpoggio, L48 Torano, L50 Bergiola, L74 Carrara→Massa'
+  },
+  {
+    num:'MS127', tipo:'CTT_OU', inizio:'06:57', fine:'14:23',
+    note:'Feriale',
+    linee:['L52','L53','L71'],
+    desc:'L71 Avenza→Via Garibaldi, L53 →Carrara Osp, L52 Marinella/Fossa Maestra'
+  },
+  {
+    num:'MS128', tipo:'MS_UUs', inizio:'16:28', fine:'22:47',
+    note:'Feriale',
+    linee:['L51','L61'],
+    desc:'L51 Carrara↔Osp.Apuane, L61 Massa FS↔Osp.Apuane (serali)'
+  },
+  {
+    num:'MS129', tipo:'AT_Nast', inizio:'06:35', fine:'13:46',
+    note:'Feriale',
+    linee:['L52','L72'],
+    desc:'L72 Avenza↔Carrara Osp, L52 Fossa Maestra'
+  },
+  {
+    num:'MS130', tipo:'MS_UNp', inizio:'13:38', fine:'20:46',
+    note:'Feriale',
+    linee:['L49','L50','L52'],
+    desc:'L52 Avenza/Fossa Maestra, L50 Colonnata, L49 Miseglia'
+  },
+  {
+    num:'MS131', tipo:'MS_UNm', inizio:'06:48', fine:'14:27',
+    note:'Feriale Escluso Sabato (Sabato fine 13:45)',
+    linee:['L51','L63','L64','L77'],
+    desc:'L77 Via Casola, L63 Paradiso, L64 Via Casola→Massa, L51 Carrara↔Osp.Apuane'
+  },
+  {
+    num:'MS132', tipo:'CTT_EP', inizio:'12:42', fine:'20:43',
+    note:'Feriale',
+    linee:['L16','L17','L71'],
+    desc:'L71 Piazza Menconi→Ponte Isolone, L17 Massa↔Aulla, L16 Aulla↔Pontremoli'
+  },
+  {
+    num:'MS133', tipo:'MS_UNmp', inizio:'06:38', fine:'17:25',
+    note:'Feriale',
+    linee:['L51','L60'],
+    desc:'L60 Massa FS↔Marina di Massa, L51 Carrara↔Osp.Apuane (nastro)'
+  },
+  {
+    num:'MS134', tipo:'AT_UFT', inizio:'12:55', fine:'19:43',
+    note:'Feriale',
+    linee:['L63','L75'],
+    desc:'L63 Via Casola↔Piazza Menconi, L75 Massa Via Europa↔Carrara Osp'
+  },
+  {
+    num:'MS135', tipo:'CTT_EM', inizio:'05:32', fine:'13:04',
+    note:'Feriale',
+    linee:['L39','L47','L48','L49','L52','L74'],
+    desc:'L52 Marinella/Fossa Maestra, L39 Castelpoggio, L47 Sorgnano, L48 Torano, L49 Miseglia, L74 Carrara→Massa'
+  },
+  {
+    num:'MS136', tipo:'AT_Nast', inizio:'13:13', fine:'20:52',
+    note:'Feriale',
+    linee:['L52'],
+    desc:'L52 Avenza/Marinella/Fossa Maestra↔Carrara Ospedale'
+  },
+  {
+    num:'MS137', tipo:'MS_UNm', inizio:'05:09', fine:'12:34',
+    note:'Feriale',
+    linee:['L17','L33','L74'],
+    desc:'L17 Carrara↔Aulla, L33 Aulla↔Fivizzano↔Equi Terme, L74 Aulla→Carrara'
+  },
+  {
+    num:'MS138', tipo:'MS_UNp', inizio:'12:43', fine:'20:30',
+    note:'Feriale',
+    linee:['L61','L73','L75'],
+    desc:'L75 Massa Via Europa↔Carrara Osp, L61 Massa↔Osp.Apuane, L73 Stadio Marmi↔Bonascola'
+  },
+  {
+    num:'MS139', tipo:'MS_UNmp', inizio:'06:33', fine:'16:47',
+    note:'Feriale',
+    linee:['L49','L54','L61','L73'],
+    desc:'L54 Avenza→Lunimare, L49 Miseglia, L73 Stadio Marmi↔Bonascola, L61 Massa↔Osp.Apuane (nastro)'
+  },
+  {
+    num:'MS140', tipo:'MS_UNp', inizio:'12:45', fine:'20:47',
+    note:'Feriale',
+    linee:['L48','L66','L74','L76','L79','L83'],
+    desc:'L83 Ortonovo, L48 Torano, L74 Carrara→Massa, L66 Antona, L79 Casette, L76 Piazza Menconi'
+  },
+  {
+    num:'MS141', tipo:'CTT_ENa', inizio:'07:17', fine:'14:35',
+    note:'Feriale',
+    linee:['L51','L601','L76'],
+    desc:'L51 Carrara↔Osp.Apuane, L76 Massa↔Piazza Menconi, L601 Piazza Menconi↔Sarzana'
+  },
+  {
+    num:'MS142', tipo:'AT_Nast', inizio:'13:36', fine:'20:59',
+    note:'Feriale',
+    linee:['L39','L70'],
+    desc:'L70 Avenza/Carrara↔Via Parma, L39 Carrara↔Castelpoggio'
+  },
+  {
+    num:'MS143', tipo:'MS_UNm', inizio:'05:16', fine:'12:10',
+    note:'Feriale',
+    linee:['L39','L75'],
+    desc:'L39 Carrara↔Fosdinovo, L75 Carrara↔Massa Via Europa'
+  },
+  {
+    num:'MS144', tipo:'MS_UNp', inizio:'12:48', fine:'20:00',
+    note:'Feriale',
+    linee:['L47','L48','L49','L52'],
+    desc:'L47 Sorgnano, L48 Torano, L49 Miseglia, L52 Fossa Maestra'
+  },
+  {
+    num:'MS145', tipo:'AT_UFT', inizio:'06:28', fine:'11:55',
+    note:'Feriale',
+    linee:['L61'],
+    desc:'L61 Massa FS↔Ospedale Apuane (mattinale breve)'
+  },
+  {
+    num:'MS146', tipo:'CTT_EP', inizio:'13:15', fine:'20:33',
+    note:'Feriale',
+    linee:['L66','L68','L79'],
+    desc:'L66 Antona, L68 Crocello, L79 Casette'
+  },
+  {
+    num:'MS147', tipo:'MS_UNm', inizio:'06:03', fine:'13:27',
+    note:'Feriale',
+    linee:['L50','L65','L74','L83'],
+    desc:'L83 Carrara↔Ortonovo, L74 Carrara→Massa, L50 Bergiola/Colonnata, L65 Biforco'
+  },
+  {
+    num:'MS148', tipo:'CTT_EP', inizio:'13:42', fine:'20:55',
+    note:'Feriale',
+    linee:['L51','L75','L83'],
+    desc:'L51 Carrara↔Osp.Apuane, L83 Carrara↔Ortonovo, L75 Carrara↔Massa Via Europa'
+  },
+  {
+    num:'MS149', tipo:'CTT_ENa', inizio:'06:12', fine:'16:32',
+    note:'Feriale',
+    linee:['L17','L601','L63','L73','L77','L79'],
+    desc:'L17 Carrara↔Sarzana, L601 Piazza Menconi↔Sarzana, L63 Via Casola, L73 Stadio Marmi, L77 Alberghiero, L79 Casette (nastro)'
+  },
+  {
+    num:'MS150', tipo:'MS_UNp', inizio:'12:52', fine:'19:10',
+    note:'Feriale',
+    linee:['L51','L70'],
+    desc:'L70 Avenza/Carrara↔Via Parma, L51 Carrara↔Osp.Apuane'
+  },
+  {
+    num:'MS151', tipo:'MS_UNm', inizio:'05:48', fine:'13:37',
+    note:'Feriale',
+    linee:['L39','L50','L74','L75'],
+    desc:'L39 Carrara↔Castelpoggio, L50 Bedizzano/Bergiola, L74 Carrara→Massa, L75 Carrara↔Massa Via Europa'
+  },
+  {
+    num:'MS152', tipo:'MS_UUp', inizio:'12:42', fine:'19:50',
+    note:'Feriale',
+    linee:['L60','L61'],
+    desc:'L60 Marina di Massa↔Massa FS, L61 Massa↔Osp.Apuane'
+  },
+  {
+    num:'MS153', tipo:'CTT_UM', inizio:'06:46', fine:'14:19',
+    note:'Feriale Escluso Sabato (Sabato inizio 06:42)',
+    linee:['L62','L71','L76','L77'],
+    desc:'L71 Avenza→Piazza Menconi, L76 Piazza Menconi→Massa, L77 Alberghiero, L62 Marina di Massa'
+  },
+  {
+    num:'MS154', tipo:'AT_UFT', inizio:'16:33', fine:'23:15',
+    note:'Feriale',
+    linee:['L61'],
+    desc:'L61 Massa FS↔Osp.Apuane (serale/notturno)'
+  },
+  {
+    num:'MS155', tipo:'AT_UFT', inizio:'06:10', fine:'13:36',
+    note:'Feriale',
+    linee:['L49','L52'],
+    desc:'L49 Miseglia, L52 Fossa Maestra'
+  },
+  {
+    num:'MS156', tipo:'AT_UFT', inizio:'12:40', fine:'20:51',
+    note:'Feriale',
+    linee:['L17','L601','L63','L73','L76','L79'],
+    desc:'L73 Bonascola→Piazza Menconi, L63 Via Casola, L601 Piazza Menconi↔Sarzana, L17 Sarzana→Massa, L76 Piazza Menconi, L79 Casette'
+  },
+  {
+    num:'MS157', tipo:'MS_UUm', inizio:'05:18', fine:'11:00',
+    note:'Feriale',
+    linee:['L51'],
+    desc:'L51 Carrara↔Osp.Apuane (mattinale breve)'
+  },
+  {
+    num:'MS158', tipo:'CTT_OU', inizio:'16:22', fine:'23:23',
+    note:'Feriale',
+    linee:['L51','L52'],
+    desc:'L52 Fossa Maestra, L51 Carrara↔Osp.Apuane (serale/notturno)'
+  },
+  {
+    num:'MS159', tipo:'CTT_OU', inizio:'05:20', fine:'11:31',
+    note:'Feriale',
+    linee:['L47','L50','L73','L74'],
+    desc:'L74 Massa→Carrara, L50 Bergiola, L47 Sorgnano, L73 Bonascola↔Paradiso'
+  },
+  {
+    num:'MS160', tipo:'CTT_OU', inizio:'13:20', fine:'19:47',
+    note:'Feriale',
+    linee:['L60','L75'],
+    desc:'L75 Massa Via Europa↔Carrara Osp, L60 Marina di Massa↔Massa FS'
+  },
+  {
+    num:'MS161', tipo:'CTT_EM', inizio:'06:05', fine:'14:03',
+    note:'Feriale',
+    linee:['L48','L52','L74','L78','L83'],
+    desc:'L78 Massa↔Resceto, L74 Massa→Carrara, L48 Torano, L83 Ortonovo, L52 Fossa Maestra/Marinella'
+  },
+  {
+    num:'MS162', tipo:'MS_UUp', inizio:'13:08', fine:'20:55',
+    note:'Feriale',
+    linee:['L61','L62','L77'],
+    desc:'L61 Massa↔Osp.Apuane, L62 Massa↔Marina/Ronchi, L77 Baracchini'
+  },
+  {
+    num:'MS163', tipo:'AT_UFT', inizio:'07:13', fine:'16:25',
+    note:'Feriale',
+    linee:['L60','L61'],
+    desc:'L61 Massa↔Osp.Apuane, L60 Marina di Massa↔Massa FS (nastro)'
+  },
+  {
+    num:'MS164', tipo:'CTT_OU', inizio:'13:40', fine:'21:03',
+    note:'Feriale',
+    linee:['L52'],
+    desc:'L52 Avenza/Fossa Maestra↔Carrara Ospedale'
+  },
+  {
+    num:'MS165', tipo:'MS_UNm', inizio:'06:08', fine:'14:07',
+    note:'Feriale',
+    linee:['L73','L75'],
+    desc:'L75 Massa Via Europa↔Carrara Osp, L73 Stadio Marmi↔Bonascola'
+  },
+  {
+    num:'MS166', tipo:'AT_Nast', inizio:'12:39', fine:'20:26',
+    note:'Feriale',
+    linee:['L52','L54'],
+    desc:'L54 Carrara↔Lunimare, L52 Paradiso/Fossa Maestra/Marinella↔Carrara Osp'
+  },
+  {
+    num:'MS167', tipo:'MS_UNm', inizio:'06:33', fine:'14:07',
+    note:'Feriale',
+    linee:['L47','L71','L72','L73','L74'],
+    desc:'L71 Avenza→Paradiso, L73 Bonascola, L74 Carrara↔Massa, L47 Sorgnano, L72 Avenza↔Carrara Osp'
+  },
+  {
+    num:'MS168', tipo:'CTT_EP', inizio:'13:00', fine:'21:11',
+    note:'Feriale',
+    linee:['L65','L66','L67','L79'],
+    desc:'L79 Casette, L66 Antona, L65 Biforco, L67 Castagnara/Bergiola'
+  },
+  {
+    num:'MS169', tipo:'AT_Nast', inizio:'07:03', fine:'17:05',
+    note:'Feriale',
+    linee:['L60'],
+    desc:'L60 Massa FS↔Marina di Massa (nastro con pausa)'
+  },
+  {
+    num:'MS170', tipo:'MS_UUs', inizio:'16:08', fine:'22:05',
+    note:'Feriale',
+    linee:['L51','L61'],
+    desc:'L61 Massa↔Osp.Apuane, L51 Osp.Apuane↔Carrara Osp (serale)'
+  },
+  {
+    num:'MS171', tipo:'CTT_EM', inizio:'06:45', fine:'14:08',
+    note:'Feriale',
+    linee:['L82'],
+    desc:'L82 Casano↔Carrara Ospedale'
+  },
+  {
+    num:'MS172', tipo:'AT_UFT', inizio:'12:43', fine:'20:43',
+    note:'Feriale',
+    linee:['L17','L73','L75'],
+    desc:'L17 Massa↔Sarzana, L73 Stadio Marmi↔Bonascola, L75 Massa↔Carrara Osp'
+  },
+  {
+    num:'MS173', tipo:'AT_Nast', inizio:'06:55', fine:'17:33',
+    note:'Feriale Escluso Sabato (Sabato inizio 06:30) — FUORI ROTAZIONE fino 22/02/2026',
+    linee:['L107','L71'],
+    desc:'L71 Carrara→Osp.Apuane, L107 San Martino↔Via VII Luglio (nastro)'
+  },
+  {
+    num:'MS174', tipo:'AT_UFT', inizio:'13:43', fine:'21:15',
+    note:'Feriale',
+    linee:['L61','L74','L75'],
+    desc:'L74 Massa↔Carrara, L75 Massa↔Carrara Osp, L61 Massa↔Osp.Apuane'
+  },
+  {
+    num:'MS175', tipo:'CTT_EM', inizio:'06:37', fine:'13:25',
+    note:'Feriale',
+    linee:['L39','L52','L71','L73'],
+    desc:'L73 Bonascola→Paradiso, L71 Paradiso→Carrara, L39 Castelpoggio, L52 Fossa Maestra'
+  },
+  {
+    num:'MS177', tipo:'CTT_EM', inizio:'05:58', fine:'13:23',
+    note:'Feriale',
+    linee:['L66','L68'],
+    desc:'L68 Massa↔Crocello, L66 Massa↔Antona'
+  },
+  {
+    num:'MS179', tipo:'AT_Nast', inizio:'06:28', fine:'14:27',
+    note:'Feriale',
+    linee:['L56','L61','L68'],
+    desc:'L68 Massa↔Cinquale, L61 Massa↔Osp.Apuane, L56 Massa↔Avenza FS'
+  },
+  {
+    num:'MS181', tipo:'CTT_OU', inizio:'05:55', fine:'13:57',
+    note:'Feriale',
+    linee:['L49','L50','L52','L74'],
+    desc:'L74 Massa→Carrara, L50 Colonnata/Bedizzano, L49 Miseglia, L52 Fossa Maestra/Marinella'
+  },
+  {
+    num:'MS183', tipo:'MS_UNm', inizio:'05:35', fine:'13:10',
+    note:'Feriale',
+    linee:['L65','L75','L79'],
+    desc:'L65 Biforco, L79 Casette, L75 Massa↔Carrara Osp'
+  },
+  {
+    num:'MS185', tipo:'AT_UFT', inizio:'06:35', fine:'14:43',
+    note:'Feriale',
+    linee:['L107','L71'],
+    desc:'L107 San Martino↔Via VII Luglio, L71 Via Campo d\'Appio→Carrara Osp'
+  },
+  {
+    num:'MS187', tipo:'MS_UNm', inizio:'06:15', fine:'14:18',
+    note:'Feriale',
+    linee:['L39','L49','L52','L70','L74','L83'],
+    desc:'L52 Turigliano→Via Parma, L70 Via Parma↔Carrara Osp, L83 Fontia, L39 Castelpoggio, L49 Miseglia, L74 Carrara→Massa'
+  },
+  {
+    num:'MS189', tipo:'AT_Nast', inizio:'06:35', fine:'14:16',
+    note:'Feriale',
+    linee:['L17','L52'],
+    desc:'L17 Sarzana→Carrara Osp, L52 Fossa Maestra/Marinella'
+  },
+  {
+    num:'MS191', tipo:'AT_UFT', inizio:'06:06', fine:'13:25',
+    note:'Feriale',
+    linee:['L60','L76','L79'],
+    desc:'L79 Casette, L76 Massa↔Paradiso, L60 Marina di Massa↔Massa FS'
+  },
+  {
+    num:'MS193', tipo:'MS_UNm', inizio:'06:08', fine:'13:52',
+    note:'Feriale',
+    linee:['L60','L61'],
+    desc:'L60 Marina di Massa↔Massa FS, L61 Massa↔Osp.Apuane'
+  },
+  {
+    num:'MS195', tipo:'AT_UFT', inizio:'05:43', fine:'13:30',
+    note:'Feriale',
+    linee:['L60','L61','L77'],
+    desc:'L60 Marina↔Massa FS, L61 Massa↔Osp.Apuane, L77 Alberghiero'
+  }
+];
+
+/* ── Cerca Servizio ── */
+let svCategoria = 'mat'; // 'mat' | 'pom' | 'tutti'
+
+function setSvCat(cat){
+  svCategoria = cat;
+  // Stili bottoni
+  const btns = {mat:'sv-btn-mat', pom:'sv-btn-pom', tutti:'sv-btn-tutti'};
+  Object.entries(btns).forEach(([k,id])=>{
+    const b = document.getElementById(id);
+    if(k===cat){
+      if(k==='mat'){
+        b.style.borderColor='var(--mattina)';b.style.background='rgba(79,158,255,.15)';b.style.color='var(--mattina)';
+      } else if(k==='pom'){
+        b.style.borderColor='var(--pomeriggio)';b.style.background='rgba(255,107,74,.15)';b.style.color='var(--pomeriggio)';
+      } else {
+        b.style.borderColor='var(--accent)';b.style.background='rgba(79,158,255,.1)';b.style.color='var(--accent)';
+      }
+    } else {
+      b.style.borderColor='var(--border)';b.style.background='transparent';b.style.color='var(--text2)';
+    }
+  });
+  // Aggiorna info e label orario
+  const info = document.getElementById('sv-cat-info');
+  const lbl  = document.getElementById('sv-orario-label');
+  if(cat==='mat'){
+    info.innerHTML='☀️ <strong style="color:var(--mattina)">Mattinali</strong> — turni con numero dispari (MS101, MS103…)';
+  } else if(cat==='pom'){
+    info.innerHTML='🌆 <strong style="color:var(--pomeriggio)">Pomeridiani</strong> — turni con numero pari (MS102, MS104…)';
+  } else {
+    info.innerHTML='🔀 <strong style="color:var(--accent)">Tutti i turni</strong> — mattinali + pomeridiani';
+  }
+  // Reset risultati
+  document.getElementById('r-servizi').innerHTML=
+    '<div class="empty-state"><div class="icon">🚌</div><p>Imposta i filtri e cerca</p></div>';
+}
+
+function searchServizi(){
+  const linea    = document.getElementById('sv-linea').value.trim().toUpperCase();
+  const iniMin   = document.getElementById('sv-inizio-min').value;  // HH:MM
+  const orario   = document.getElementById('sv-orario').value;       // HH:MM fine
+  const tipo     = document.getElementById('sv-tipo').value;
+  const toMin    = t => { if(!t) return null; const [h,m]=t.split(':'); return parseInt(h)*60+parseInt(m); };
+
+  // Filtro categoria
+  let pool = TURNI_SERVIZIO.filter(t => {
+    const n = parseInt(t.num.replace('MS',''));
+    if(svCategoria==='mat')  return n % 2 !== 0;
+    if(svCategoria==='pom')  return n % 2 === 0;
+    return true;
+  });
+
+  // Filtro linea
+  if(linea){
+    const cercaLinea = linea.startsWith('L') ? linea : 'L'+linea;
+    pool = pool.filter(t => t.linee.includes(cercaLinea));
+  }
+
+  // Filtro inizio turno (da X in poi)
+  if(iniMin) pool = pool.filter(t => toMin(t.inizio) >= toMin(iniMin));
+
+  // Filtro fine turno (entro X)
+  if(orario) pool = pool.filter(t => toMin(t.fine) <= toMin(orario));
+
+  // Filtro tipologia
+  if(tipo) pool = pool.filter(t => t.tipo === tipo);
+
+  if(pool.length===0){
+    document.getElementById('r-servizi').innerHTML=
+      '<div class="empty-state"><div class="icon">🔍</div><p>Nessun turno trovato con questi filtri</p></div>';
+    return;
+  }
+
+  const tipoColor={
+    'CTT_UM':'#4f9eff','CTT_EP':'#ff6b4a','CTT_EM':'#fb923c','CTT_OU':'#a78bfa',
+    'MS_UNm':'#34d399','MS_UNp':'#f472b6','MS_UNmp':'#facc15',
+    'MS_UUm':'#60a5fa','MS_UUp':'#f87171','MS_UUs':'#c084fc',
+    'AT_UFT':'#2dd4bf','AT_Nast':'#a3e635'
+  };
+
+  const catLabel = svCategoria==='mat' ? '☀️ Mattinali' : svCategoria==='pom' ? '🌆 Pomeridiani' : '🔀 Tutti';
+  const filtriAttivi=[];
+  if(linea)  filtriAttivi.push(`Linea <strong>L${linea.replace('L','')}</strong>`);
+  if(iniMin) filtriAttivi.push(`Inizio ≥ <strong>${iniMin}</strong>`);
+  if(orario) filtriAttivi.push(`Fine ≤ <strong>${orario}</strong>`);
+  if(tipo)   filtriAttivi.push(`Tipo <strong>${tipo}</strong>`);
+
+  let html=`
+    <div style="margin-bottom:1rem;display:flex;align-items:center;gap:.8rem;flex-wrap:wrap">
+      <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--text2)">
+        ${catLabel}${filtriAttivi.length ? ' · '+filtriAttivi.join(' · ') : ''}
+      </div>
+      <div style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--text2)">
+        — <strong style="color:var(--text)">${pool.length}</strong> turni trovati
+      </div>
+    </div>
+    <div style="display:grid;gap:.5rem">`;
+
+  pool.forEach(t=>{
+    const col = tipoColor[t.tipo]||'#7a8099';
+    const n = parseInt(t.num.replace('MS',''));
+    const catIcon = n%2!==0 ? '☀️' : '🌆';
+    html+=`
+    <div class="sv-card">
+      <div class="sv-card-header">
+        <div class="sv-num">${catIcon} ${t.num}</div>
+        <div class="sv-tipo" style="color:${col};border-color:${col};background:${col}22">${t.tipo}</div>
+        <div class="sv-orari">Inizio <strong>${t.inizio}</strong> &nbsp;→&nbsp; Fine <strong>${t.fine}</strong></div>
+        ${t.note?`<div class="sv-note">⚑ ${t.note}</div>`:''}
+      </div>
+      <div class="sv-linee">
+        ${t.linee.length===0
+          ? '<span style="font-family:\'DM Mono\',monospace;font-size:.65rem;color:var(--text2)">Disposizione</span>'
+          : t.linee.map(l=>`<span class="sv-linea">${l}</span>`).join('')}
+      </div>
+      <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--text2);margin-top:.4rem">${t.desc}</div>
+    </div>`;
+  });
+
+  html+=`</div>`;
+  document.getElementById('r-servizi').innerHTML=html;
 }
 
 /* ── Init ── */
