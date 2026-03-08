@@ -1,1642 +1,725 @@
-<!DOCTYPE html><html lang="it">
 
+
+<!DOCTYPE html>
+<html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gestionale Turni — Catagnina T2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>NewEnergy Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;700&family=Courier+Prime&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap');
-  :root{--bg:#0d0f14;--surface:#151820;--surface2:#1c2030;--border:#252a38;--accent:#4f9eff;--accent2:#ff6b4a;--text:#e8eaf0;--text2:#7a8099;--mattina:#4f9eff;--pomeriggio:#ff6b4a;--riposo:#3a3f52;--rep-mat:#a78bfa;--rep-pom:#fb923c;--festivo:#f59e0b;}
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;}
-  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(79,158,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(79,158,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
-  .container{max-width:1200px;margin:0 auto;padding:2rem;position:relative;z-index:1;}
-  header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:1rem;}
-  .logo{font-size:2rem;font-weight:800;letter-spacing:-0.03em;}.logo span{color:var(--accent);}
-  .subtitle{color:var(--text2);font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:0.1em;text-transform:uppercase;}
-  .tabs{display:flex;gap:.5rem;margin-bottom:2rem;background:var(--surface);padding:.4rem;border-radius:12px;border:1px solid var(--border);width:fit-content;flex-wrap:wrap;}
-  .tab{padding:.6rem 1.2rem;border-radius:8px;border:none;background:transparent;color:var(--text2);font-family:'Syne',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s;}
-  .tab.active{background:var(--accent);color:#fff;}.tab:hover:not(.active){color:var(--text);}
-  .tab.festivo-tab.active{background:var(--festivo);color:#000;}
-  .panel{display:none;}.panel.active{display:block;}
-  .search-row{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:flex-end;}
-  .field{display:flex;flex-direction:column;gap:.4rem;}
-  label{font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);}
-  select,input{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:.6rem 1rem;border-radius:8px;font-family:'DM Mono',monospace;font-size:.88rem;outline:none;transition:border-color .2s;min-width:180px;}
-  select:focus,input:focus{border-color:var(--accent);}
-  .btn{padding:.65rem 1.5rem;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s;}
-  .btn:hover{background:#6aadff;transform:translateY(-1px);}
-  .btn-festivo{background:var(--festivo);color:#000;}.btn-festivo:hover{background:#fbbf24;}
-  .legend{display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:1.5rem;padding:.8rem 1rem;background:var(--surface);border-radius:8px;border:1px solid var(--border);}
-  .legend-item{display:flex;align-items:center;gap:.4rem;font-family:'DM Mono',monospace;font-size:.72rem;color:var(--text2);}
-  .legend-dot{width:8px;height:8px;border-radius:50%;}
-  .weeks-grid{display:grid;gap:.6rem;}
-  .week-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.9rem 1.2rem;display:grid;grid-template-columns:160px 70px 1fr;align-items:center;gap:1rem;}
-  .week-row.current-week{border-color:var(--accent);background:rgba(79,158,255,.06);}
-  .week-label{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--text2);}
-  .week-label strong{display:block;color:var(--text);font-size:.92rem;}
-  .week-position{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--text2);text-align:center;}
-  .week-position .pos-num{display:block;font-size:1.3rem;font-weight:500;color:var(--text);}
-  .days-row{display:grid;grid-template-columns:repeat(7,1fr);gap:.3rem;}
-  .day-cell{border-radius:6px;padding:.3rem .2rem;text-align:center;}
-  .day-name{color:var(--text2);font-size:.58rem;letter-spacing:.05em;display:block;margin-bottom:2px;font-family:'DM Mono',monospace;}
-  .day-shift{font-size:.68rem;font-weight:500;display:block;padding:2px 3px;border-radius:4px;font-family:'DM Mono',monospace;}
-  .shift-mattina .day-shift{background:rgba(79,158,255,.15);color:var(--mattina);}
-  .shift-pomeriggio .day-shift{background:rgba(255,107,74,.15);color:var(--pomeriggio);}
-  .shift-riposo .day-shift{background:rgba(58,63,82,.5);color:var(--text2);}
-  .shift-rep-mat .day-shift{background:rgba(167,139,250,.15);color:var(--rep-mat);}
-  .shift-rep-pom .day-shift{background:rgba(251,146,60,.15);color:var(--rep-pom);}
-  .worker-badge{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.8rem 1.2rem;display:inline-flex;align-items:center;gap:1rem;margin-bottom:1.5rem;}
-  .worker-code{font-family:'DM Mono',monospace;font-size:1.2rem;font-weight:500;color:var(--accent);}
-  .worker-info{font-size:.83rem;color:var(--text2);}
-  .current-badge{font-family:'DM Mono',monospace;font-size:.62rem;background:var(--accent);color:#fff;padding:.15rem .5rem;border-radius:20px;margin-left:.5rem;vertical-align:middle;}
-  .weekly-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.6rem;margin-top:1rem;}
-  .day-column{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
-  .day-header{background:var(--surface2);padding:.6rem;text-align:center;font-size:.75rem;font-weight:700;letter-spacing:.05em;border-bottom:1px solid var(--border);}
-  .day-header.weekend{color:var(--accent2);}
-  .shift-list{padding:.5rem;}
-  .shift-item{padding:.4rem .6rem;border-radius:6px;margin-bottom:.3rem;font-family:'DM Mono',monospace;font-size:.7rem;}
-  .shift-item .worker-name{display:block;font-weight:500;font-size:.72rem;color:var(--text);}
-  .shift-item .shift-type{font-size:.62rem;margin-top:1px;}
-  .shift-item.mattina{background:rgba(79,158,255,.1);border-left:2px solid var(--mattina);}
-  .shift-item.mattina .shift-type{color:var(--mattina);}
-  .shift-item.pomeriggio{background:rgba(255,107,74,.1);border-left:2px solid var(--pomeriggio);}
-  .shift-item.pomeriggio .shift-type{color:var(--pomeriggio);}
-  .shift-item.rep-mat{background:rgba(167,139,250,.1);border-left:2px solid var(--rep-mat);}
-  .shift-item.rep-mat .shift-type{color:var(--rep-mat);}
-  .shift-item.rep-pom{background:rgba(251,146,60,.1);border-left:2px solid var(--rep-pom);}
-  .shift-item.rep-pom .shift-type{color:var(--rep-pom);}
-  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2rem;}
-  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;}
-  .stat-label{font-family:'DM Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text2);margin-bottom:.3rem;}
-  .stat-value{font-size:1.6rem;font-weight:800;}
-  .group-section{margin-bottom:2rem;}
-  .group-title{font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);}
-  .empty-state{text-align:center;padding:4rem 2rem;color:var(--text2);}
-  .empty-state .icon{font-size:3rem;margin-bottom:1rem;}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-  .result-section{animation:fadeIn .3s ease;}
+:root {
+  --gold: #b8922a; --gold2: #d4a83c;
+  --green: #3a8a60; --green2: #2e7050;
+  --blue: #4a7a9f; --red: #b05050;
+  --bg-s: #f0ebe0; --bg2-s: #e8e2d6; --bg3-s: #dfd8ca;
+  --bg-f: #e8f0e8; --bg2-f: #dceadc; --bg3-f: #d0e2d0;
+  --border: rgba(0,0,0,.09);
+  --text: #6a6450; --textl: #252015;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg-s);color:var(--text);font-family:'Courier Prime',monospace;font-size:14px}
+::-webkit-scrollbar{width:0}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh}
 
-/* ── Turno del Giorno ── */
-.giorno-header{display:flex;align-items:center;gap:1.2rem;margin-bottom:1.8rem;flex-wrap:wrap;}
-.giorno-date-badge{background:var(–surface2);border:1px solid var(–border);border-radius:12px;padding:.7rem 1.2rem;font-family:‘DM Mono’,monospace;}
-.giorno-date-badge .gdb-day{font-size:1.5rem;font-weight:700;color:var(–text);line-height:1;}
-.giorno-date-badge .gdb-label{font-size:.65rem;color:var(–text2);text-transform:uppercase;letter-spacing:.1em;margin-top:.2rem;}
-.giorno-totals{display:flex;gap:.6rem;flex-wrap:wrap;}
-.giorno-pill{font-family:‘DM Mono’,monospace;font-size:.72rem;padding:.3rem .8rem;border-radius:20px;border:1px solid;}
-.giorno-list{display:grid;gap:.35rem;}
-.giorno-row{background:var(–surface);border:1px solid var(–border);border-radius:8px;padding:.65rem 1rem;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:1rem;transition:background .15s;}
-.giorno-row:hover{background:var(–surface2);}
-.giorno-worker{font-family:‘DM Mono’,monospace;font-size:.83rem;font-weight:500;color:var(–text);}
-.giorno-group{font-family:‘DM Mono’,monospace;font-size:.65rem;color:var(–text2);}
-.giorno-shift-badge{font-family:‘DM Mono’,monospace;font-size:.7rem;padding:.25rem .65rem;border-radius:6px;font-weight:500;white-space:nowrap;}
-.giorno-shift-badge.mattina{background:rgba(79,158,255,.15);color:var(–mattina);}
-.giorno-shift-badge.pomeriggio{background:rgba(255,107,74,.15);color:var(–pomeriggio);}
-.giorno-shift-badge.rep-mat{background:rgba(167,139,250,.15);color:var(–rep-mat);}
-.giorno-shift-badge.rep-pom{background:rgba(251,146,60,.15);color:var(–rep-pom);}
-.giorno-shift-badge.riposo{background:rgba(58,63,82,.4);color:var(–text2);}
-.giorno-code{font-family:‘DM Mono’,monospace;font-size:.7rem;color:var(–text2);}
-.section-divider{font-family:‘DM Mono’,monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(–text2);margin:1.2rem 0 .5rem;padding:.3rem .6rem;background:var(–surface2);border-radius:6px;display:inline-block;}
-.giorno-filter-tabs{display:flex;gap:.4rem;margin-bottom:1.2rem;flex-wrap:wrap;}
-.gf-tab{padding:.35rem .9rem;border-radius:20px;border:1px solid var(–border);background:transparent;color:var(–text2);font-family:‘DM Mono’,monospace;font-size:.72rem;cursor:pointer;transition:all .2s;}
-.gf-tab.active{color:#fff;border-color:transparent;}
-.gf-tab.active.all{background:var(–accent);}
-.gf-tab.active.mattina{background:var(–mattina);}
-.gf-tab.active.pomeriggio{background:var(–pomeriggio);}
-.gf-tab.active.rep-mat{background:var(–rep-mat);}
-.gf-tab.active.rep-pom{background:var(–rep-pom);}
-.gf-tab.active.riposo{background:var(–riposo);}
-.gf-tab:hover:not(.active){color:var(–text);}
+/* TOP BAR */
+.topbar{flex-shrink:0;padding:14px 18px 11px;padding-top:max(14px,env(safe-area-inset-top));display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid rgba(0,0,0,.1)}
+.tb-brand{font-family:'Playfair Display',serif}
+.tb-sub{font-size:9px;letter-spacing:3px;color:rgba(201,168,76,.45);text-transform:uppercase;margin-bottom:2px}
+.tb-title{font-size:20px;font-weight:300;color:var(--textl);line-height:1}
+.tb-title span{color:var(--gold);font-weight:700}
+.tb-right{text-align:right}
+.tb-rlabel{font-size:8px;letter-spacing:2px;color:#445;text-transform:uppercase}
+.tb-rval{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);font-weight:700}
+.tb-rval span{font-size:10px;color:rgba(201,168,76,.45);font-weight:400}
 
-/* ── Cerca Turno ── */
-.turno-result-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;}
-.turno-num-badge{font-family:‘DM Mono’,monospace;font-size:2rem;font-weight:700;color:var(–text);background:var(–surface2);border:1px solid var(–border);border-radius:12px;padding:.5rem 1.2rem;line-height:1;}
-.turno-num-badge .tnb-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:var(–text2);display:block;margin-bottom:.2rem;}
-.turno-num-badge .tnb-type{font-size:.72rem;margin-top:.3rem;display:block;}
-.cerca-turno-list{display:grid;gap:.35rem;}
-.ct-row{background:var(–surface);border:1px solid var(–border);border-radius:8px;padding:.7rem 1rem;display:grid;grid-template-columns:1fr auto;align-items:center;gap:1rem;transition:background .15s;}
-.ct-row:hover{background:var(–surface2);}
-.ct-worker{font-family:‘DM Mono’,monospace;font-size:.85rem;font-weight:500;color:var(–text);}
-.ct-group{font-family:‘DM Mono’,monospace;font-size:.65rem;color:var(–text2);margin-top:.15rem;}
-.ct-days{display:flex;gap:.3rem;flex-wrap:wrap;justify-content:flex-end;}
-.ct-day-pill{font-family:‘DM Mono’,monospace;font-size:.68rem;padding:.2rem .55rem;border-radius:6px;}
+/* SCROLL */
+.scroll-area{flex:1;overflow-y:auto;padding:13px 14px 16px;-webkit-overflow-scrolling:touch}
 
-/* ── Cerca Servizio ── */
-.sv-card{background:var(–surface);border:1px solid var(–border);border-radius:10px;padding:.9rem 1.2rem;margin-bottom:.5rem;transition:background .15s;}
-.sv-card:hover{background:var(–surface2);}
-.sv-card-header{display:flex;align-items:center;gap:1rem;margin-bottom:.6rem;flex-wrap:wrap;}
-.sv-num{font-family:‘DM Mono’,monospace;font-size:1.1rem;font-weight:700;color:var(–accent);}
-.sv-tipo{font-family:‘DM Mono’,monospace;font-size:.68rem;padding:.2rem .6rem;border-radius:20px;background:rgba(79,158,255,.12);color:var(–accent);border:1px solid var(–accent);}
-.sv-orari{font-family:‘DM Mono’,monospace;font-size:.78rem;color:var(–text2);}
-.sv-orari strong{color:var(–text);}
-.sv-linee{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.4rem;}
-.sv-linea{font-family:‘DM Mono’,monospace;font-size:.65rem;padding:.15rem .5rem;border-radius:5px;background:var(–surface2);color:var(–text2);border:1px solid var(–border);}
-.sv-note{font-family:‘DM Mono’,monospace;font-size:.62rem;color:var(–accent2);margin-top:.3rem;}
+/* PANELS */
+.panel{display:none;animation:fu .27s ease both}
+.panel.active{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
 
-/* ── Festivi ── */
-.festivo-header-banner{background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(245,158,11,.05));border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:.9rem 1.2rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
-.festivo-icon{font-size:1.6rem;}
-.festivo-title{font-size:1rem;font-weight:800;color:var(–festivo);}
-.festivo-sub{font-family:‘DM Mono’,monospace;font-size:.7rem;color:var(–text2);margin-top:.2rem;}
-.fv-cat-btns{display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap;}
-.fv-cat-btn{padding:.55rem 1.4rem;border-radius:8px;border:2px solid;font-family:‘Syne’,sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s;}
-.fv-card{background:var(–surface);border:1px solid var(–border);border-radius:10px;padding:.9rem 1.2rem;margin-bottom:.5rem;transition:background .15s;}
-.fv-card:hover{background:var(–surface2);}
-.fv-card-header{display:flex;align-items:center;gap:.8rem;margin-bottom:.6rem;flex-wrap:wrap;}
-.fv-num{font-family:‘DM Mono’,monospace;font-size:1.1rem;font-weight:700;}
-.fv-tipo{font-family:‘DM Mono’,monospace;font-size:.68rem;padding:.2rem .6rem;border-radius:20px;border:1px solid;}
-.fv-orari{font-family:‘DM Mono’,monospace;font-size:.78rem;color:var(–text2);}
-.fv-orari strong{color:var(–text);}
-.fv-linee{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.4rem;}
-.fv-linea{font-family:‘DM Mono’,monospace;font-size:.65rem;padding:.15rem .5rem;border-radius:5px;background:var(–surface2);color:var(–text2);border:1px solid var(–border);}
-.fv-desc{font-family:‘DM Mono’,monospace;font-size:.7rem;color:var(–text2);margin-top:.4rem;line-height:1.5;}
-.fv-corsa-list{margin-top:.6rem;display:grid;gap:.2rem;}
-.fv-corsa{font-family:‘DM Mono’,monospace;font-size:.63rem;color:var(–text2);padding:.2rem .5rem;background:var(–surface2);border-radius:5px;display:flex;gap:.5rem;}
-.fv-corsa .fv-linea-badge{font-weight:700;min-width:30px;}
-.fv-corsa .fv-ora{min-width:45px;}
-.fv-section-title{font-family:‘DM Mono’,monospace;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;margin:1.5rem 0 .8rem;padding:.4rem .8rem;border-radius:8px;display:inline-flex;align-items:center;gap:.5rem;}
-.fv-section-title.mat{background:rgba(79,158,255,.1);color:var(–mattina);border:1px solid rgba(79,158,255,.25);}
-.fv-section-title.pom{background:rgba(255,107,74,.1);color:var(–pomeriggio);border:1px solid rgba(255,107,74,.25);}
-.fv-section-title.sera{background:rgba(167,139,250,.1);color:var(–rep-mat);border:1px solid rgba(167,139,250,.25);}
-.fv-count-badge{font-family:‘DM Mono’,monospace;font-size:.7rem;padding:.2rem .6rem;border-radius:20px;background:rgba(245,158,11,.15);color:var(–festivo);border:1px solid rgba(245,158,11,.3);margin-left:.5rem;}
+/* BOTTOM NAV */
+.bottom-nav{flex-shrink:0;display:flex;background:#e8e2d6;border-top:1px solid rgba(0,0,0,.1);padding-bottom:max(10px,env(safe-area-inset-bottom))}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:none;cursor:pointer;color:#9a9080;padding:10px 0;font-family:'Courier Prime',monospace;transition:color .2s}
+.nav-btn.active{color:var(--gold)}
+.nav-icon{font-size:19px;line-height:1;transition:transform .2s}
+.nav-btn.active .nav-icon{transform:scale(1.18)}
+.nav-label{font-size:8px;letter-spacing:1.5px;text-transform:uppercase}
+
+/* CARDS */
+.card{background:linear-gradient(135deg,var(--bg2-s),var(--bg3-s));border:1px solid var(--border);border-radius:14px;padding:15px;margin-bottom:11px}
+.card-f{background:linear-gradient(135deg,var(--bg2-f),var(--bg3-f));border:1px solid rgba(82,168,122,.1)}
+.clabel{font-size:8px;letter-spacing:3px;color:#445;text-transform:uppercase;margin-bottom:11px}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:11px}
+.kpi-card{background:linear-gradient(135deg,var(--bg2-s),var(--bg3-s));border:1px solid var(--border);border-radius:14px;padding:14px}
+.kpi-card.full{grid-column:1/-1}
+.kpi-lbl{font-size:8px;letter-spacing:2px;color:#445;text-transform:uppercase;margin-bottom:8px}
+.kpi-val{font-family:'Playfair Display',serif;font-size:29px;font-weight:700;line-height:1}
+.kpi-val.sm{font-size:23px}
+.kpi-sub{font-size:11px;font-weight:400;opacity:.4}
+
+/* PROGRESS */
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.prog-title{font-family:'Playfair Display',serif;font-size:14px;color:var(--textl)}
+.prog-pct{font-family:'Playfair Display',serif;font-size:25px;color:var(--gold);font-weight:700}
+.prog-bg{background:rgba(0,0,0,.1);border-radius:3px;height:5px;overflow:hidden;margin-bottom:5px}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:3px;transition:width 1.1s cubic-bezier(.4,0,.2,1)}
+.prog-hint{font-size:10px;color:#445}
+
+/* MONTH ROW */
+.month-row{display:flex;align-items:center;gap:9px;padding:8px 4px;border-radius:8px}
+.mname{min-width:100px;font-size:12px;color:#a8bab2}
+.mname .yr{color:#445;font-size:10px}
+.mbar-bg{flex:1;background:rgba(0,0,0,.1);border-radius:2px;height:3px;overflow:hidden}
+.mbar-fill{height:100%;background:rgba(201,168,76,.45);border-radius:2px}
+.mearn{font-family:'Playfair Display',serif;font-size:16px;color:var(--green2);min-width:44px;text-align:right}
+
+/* YEAR SEP */
+.ysep{display:flex;align-items:center;gap:11px;margin:13px 0 9px}
+.ysep span{font-size:9px;letter-spacing:4px;color:rgba(160,130,50,.5);text-transform:uppercase}
+.ysep hr{flex:1;border:none;border-top:1px solid rgba(0,0,0,.07)}
+
+/* MONTH BLOCK */
+.mblock{background:linear-gradient(135deg,var(--bg2-s),var(--bg3-s));border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:9px}
+.mblock-head{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:9px;border-bottom:1px solid rgba(0,0,0,.1)}
+.mblock-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--textl)}
+.mblock-sub{font-size:9px;color:#445;margin-top:2px}
+.mblock-earn{font-family:'Playfair Display',serif;font-size:20px;color:var(--green2);font-weight:700}
+
+/* CLIENT ROW */
+.crow{display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-radius:8px}
+.crow:active{background:rgba(201,168,76,.04)}
+.cname{font-size:12px;color:#a8bab2;flex:1;margin-right:6px}
+.cright{display:flex;gap:5px;align-items:center;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.badge{font-size:7px;letter-spacing:1px;padding:3px 6px;border-radius:3px;white-space:nowrap}
+.bl{background:rgba(201,168,76,.08);color:var(--gold);border:1px solid rgba(201,168,76,.2)}
+.bg{background:rgba(82,168,122,.08);color:var(--green2);border:1px solid rgba(82,168,122,.2)}
+.bp{background:rgba(82,168,122,.12);color:var(--green2);border:1px solid rgba(82,168,122,.3)}
+.cearn{font-family:'Playfair Display',serif;font-size:14px;color:var(--gold);white-space:nowrap}
+.brm{background:rgba(192,96,96,.06);border:1px solid rgba(192,96,96,.15);color:rgba(200,130,130,.6);border-radius:5px;padding:4px 7px;cursor:pointer;font-size:11px}
+.brm:active{background:rgba(192,96,96,.2);color:#e08080}
+
+/* INPUTS */
+.inp{width:100%;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.12);border-radius:10px;color:var(--textl);padding:12px 13px;font-size:14px;font-family:'Courier Prime',monospace;transition:border-color .2s;margin-bottom:9px}
+.inp:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(201,168,76,.1)}
+.inp.sm{padding:9px 11px;font-size:13px}
+select.inp{cursor:pointer}
+
+/* PILLS */
+.pills{display:flex;gap:7px;flex-wrap:wrap}
+.pill{background:rgba(255,255,255,.6);color:#8a8270;border:1px solid rgba(0,0,0,.1);border-radius:20px;padding:5px 12px;cursor:pointer;font-size:10px;letter-spacing:1px;font-family:'Courier Prime',monospace;transition:all .18s}
+.pill.active{background:rgba(201,168,76,.12);color:var(--gold);border-color:rgba(201,168,76,.35)}
+
+/* BTNS */
+.btn-p{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#141a16;border:none;border-radius:12px;padding:13px;cursor:pointer;font-size:11px;letter-spacing:3px;font-weight:bold;font-family:'Courier Prime',monospace;transition:all .18s;margin-bottom:9px}
+.btn-p:active{opacity:.82;transform:scale(.98)}
+.btn-s{width:100%;background:rgba(74,122,159,.1);color:var(--blue);border:1px solid rgba(74,122,159,.25);border-radius:12px;padding:11px;cursor:pointer;font-size:10px;letter-spacing:2px;font-family:'Courier Prime',monospace;transition:all .18s;margin-bottom:9px}
+.btn-s:active{opacity:.75}
+
+/* AGGIUNGI - contratto list */
+.ctr-row{display:flex;align-items:center;gap:7px;padding:9px 4px;border-bottom:1px solid rgba(0,0,0,.06)}
+.ctr-row:last-child{border-bottom:none}
+.ctr-info{flex:1;min-width:0}
+.ctr-name{font-size:13px;color:#a8bab2;margin-bottom:3px}
+.ctr-badges{display:flex;gap:4px;flex-wrap:wrap}
+.ctr-right{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.ctr-earn{font-family:'Playfair Display',serif;font-size:15px;color:var(--gold)}
+.paid-btn{font-size:17px;background:none;border:1px solid rgba(0,0,0,.12);border-radius:8px;padding:4px 7px;cursor:pointer;transition:all .18s;line-height:1}
+.paid-btn.paid{background:rgba(82,168,122,.12);border-color:rgba(82,168,122,.3)}
+.paid-btn:active{transform:scale(.88)}
+
+/* NOMINATIVI */
+.nom-add{display:flex;gap:7px}
+.nom-add .inp{margin-bottom:0;flex:1}
+
+.nom-card{
+  background:linear-gradient(135deg,var(--bg2-f),var(--bg3-f));
+  border:1px solid rgba(58,138,96,.15);
+  border-radius:14px;margin-bottom:10px;
+  overflow:hidden;transition:border-color .2s;
+}
+.nom-card.open{border-color:rgba(82,168,122,.3)}
+.nom-card-header{
+  display:flex;align-items:center;gap:10px;
+  padding:13px 14px;cursor:pointer;user-select:none;
+}
+.nom-card-header:active{opacity:.8}
+.nom-dots{display:flex;gap:5px;align-items:center;flex-shrink:0}
+.ndot{width:8px;height:8px;border-radius:50%;background:rgba(0,0,0,.1);transition:background .2s}
+.ndot.on-co{background:var(--blue)}
+.ndot.on-dc{background:var(--gold)}
+.ndot.on-sent{background:var(--green2)}
+.nom-card-name{flex:1;font-size:14px;color:#7a9a88;font-weight:400;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nom-card-prov{font-family:'Playfair Display',serif;font-size:14px;color:var(--gold);flex-shrink:0}
+.nom-arrow{font-size:11px;color:#445;transition:transform .25s;flex-shrink:0}
+.nom-card.open .nom-arrow{transform:rotate(180deg)}
+
+.nom-card-body{
+  display:none;padding:0 14px 14px;
+  border-top:1px solid rgba(0,0,0,.07);
+  animation:fu .2s ease both;
+}
+.nom-card.open .nom-card-body{display:block}
+
+.nom-steps{display:flex;gap:8px;margin:12px 0 10px}
+.nstep{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:10px 6px;border-radius:10px;border:1px solid rgba(0,0,0,.1);background:rgba(255,255,255,.4);transition:all .2s}
+.nstep:active{transform:scale(.94)}
+.nstep-icon{font-size:20px;line-height:1}
+.nstep-lbl{font-size:8px;letter-spacing:2px;color:#445;text-transform:uppercase}
+.nstep.active-co{background:rgba(106,154,191,.12);border-color:rgba(106,154,191,.35)}
+.nstep.active-co .nstep-lbl{color:var(--blue)}
+.nstep.active-dc{background:rgba(201,168,76,.1);border-color:rgba(201,168,76,.35)}
+.nstep.active-dc .nstep-lbl{color:var(--gold)}
+.nstep.active-sent{background:rgba(82,168,122,.12);border-color:rgba(82,168,122,.35)}
+.nstep.active-sent .nstep-lbl{color:var(--green2)}
+
+.nom-toggles{display:flex;gap:8px;margin-bottom:10px}
+.ntog{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,.1);background:rgba(255,255,255,.4);cursor:pointer;font-size:12px;letter-spacing:1px;transition:all .2s}
+.ntog:active{transform:scale(.95)}
+.ntog.on-luce{background:rgba(201,168,76,.1);border-color:rgba(201,168,76,.35);color:var(--gold)}
+.ntog.on-gas{background:rgba(82,168,122,.1);border-color:rgba(82,168,122,.35);color:var(--green2)}
+
+.nom-prov-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.nom-prov-lbl{font-size:9px;letter-spacing:2px;color:#445;white-space:nowrap}
+.nom-prov-inp{flex:1;background:rgba(255,255,255,.6);border:1px solid rgba(0,0,0,.12);border-radius:8px;color:var(--textl);padding:9px 11px;font-size:13px;font-family:'Courier Prime',monospace;transition:border-color .2s}
+.nom-prov-inp:focus{outline:none;border-color:var(--gold)}
+
+.nom-note{width:100%;background:rgba(255,255,255,.6);border:1px solid rgba(0,0,0,.1);border-radius:9px;color:var(--textl);padding:9px 11px;font-size:12px;font-family:'Courier Prime',monospace;resize:none;height:64px;transition:border-color .2s;margin-bottom:10px}
+.nom-note:focus{outline:none;border-color:rgba(82,168,122,.35)}
+
+.nom-footer{display:flex;justify-content:flex-end}
+.nrm{background:rgba(192,96,96,.06);border:1px solid rgba(192,96,96,.15);color:rgba(200,130,130,.55);border-radius:8px;padding:7px 14px;cursor:pointer;font-size:11px;letter-spacing:1px;font-family:'Courier Prime',monospace}
+.nrm:active{background:rgba(192,96,96,.2);color:#e08080}
+
+/* PROIEZIONE */
+.proj-sep{display:flex;align-items:center;gap:11px;margin:18px 0 13px}
+.proj-sep span{font-size:9px;letter-spacing:4px;color:rgba(201,168,76,.3);text-transform:uppercase}
+.proj-sep hr{flex:1;border:none;border-top:1px solid rgba(201,168,76,.07)}
+.prow{border-radius:14px;padding:15px 17px;margin-bottom:9px;display:flex;align-items:center;gap:13px}
+.pyear{font-family:'Playfair Display',serif;font-size:25px;font-weight:300;min-width:62px}
+.pbody{flex:1;min-width:0}
+.pmeta{display:flex;justify-content:space-between;margin-bottom:7px;font-size:9px;color:#445;flex-wrap:wrap;gap:2px}
+.pmeta .ok{color:var(--green2)}
+.pprog-bg{background:rgba(0,0,0,.12);border-radius:2px;height:4px;overflow:hidden}
+.pprog-fill{height:100%;border-radius:2px;transition:width 1.1s cubic-bezier(.4,0,.2,1)}
+.pearn{text-align:right;min-width:55px}
+.pearn-val{font-family:'Playfair Display',serif;font-size:19px;font-weight:700}
+.pearn-sub{font-size:8px;color:#556;letter-spacing:1px}
+.note-box{background:linear-gradient(135deg,var(--bg2-f),var(--bg3-f));border:1px solid rgba(82,168,122,.1);border-radius:14px;padding:15px;margin-top:7px}
+.note-lbl{font-size:8px;letter-spacing:3px;color:rgba(82,168,122,.4);text-transform:uppercase;margin-bottom:8px}
+.note-txt{font-size:12px;color:#607060;line-height:1.9}
+.hl-g{color:var(--gold)}.hl-gr{color:var(--green2)}.hl-w{color:var(--textl)}
+
+.ins-lbl{font-size:8px;letter-spacing:3px;color:#334;text-transform:uppercase;margin:13px 0 9px;padding-top:13px;border-top:1px solid var(--border)}
+
+/* CHK LUCE/GAS in AGGIUNGI */
+.chk-tog{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,.1);cursor:pointer;font-size:11px;letter-spacing:2px;transition:all .18s;background:rgba(255,255,255,.5);color:#8a8270}
+.chk-tog.on-luce{background:rgba(201,168,76,.12);border-color:rgba(201,168,76,.4);color:var(--gold)}
+.chk-tog.on-gas{background:rgba(82,168,122,.1);border-color:rgba(82,168,122,.4);color:var(--green2)}
 </style>
-
 </head>
 <body>
-<div class="container">
-  <header>
-    <div>
-      <div class="logo">TURNI<span>.</span>APP</div>
-      <div class="subtitle">Catagnina T2 — In vigore dal 07/01/2026</div>
-    </div>
-    <div style="text-align:right">
-      <div class="subtitle" id="today-label"></div>
-      <div style="font-family:'DM Mono',monospace;font-size:.75rem;color:var(--accent);margin-top:.3rem" id="week-info"></div>
-    </div>
-  </header>
+<div class="app">
 
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('cerca',this)">👤 Cerca Lavoratore</button>
-    <button class="tab" onclick="switchTab('cercaturno',this)">🔢 Cerca Turno</button>
-    <button class="tab" onclick="switchTab('giorno',this)">📋 Turno del Giorno</button>
-    <button class="tab" onclick="switchTab('turno',this)">🌅 Mattina / Pomeriggio</button>
-    <button class="tab" onclick="switchTab('settimanale',this)">📅 Vista Settimana</button>
-    <button class="tab" onclick="switchTab('panoramica',this)">📊 Panoramica</button>
-    <button class="tab" onclick="switchTab('servizi',this)">🚌 Cerca Servizio</button>
-    <button class="tab festivo-tab" onclick="switchTab('festivi',this)">☀️ Dom & Festivi</button>
+<div class="topbar">
+  <div class="tb-brand">
+    <div class="tb-sub">Multi Brand</div>
+    <div class="tb-title">New<span>Energy</span></div>
   </div>
-
-  <!-- TAB: Cerca Lavoratore -->
-
-  <div class="panel active" id="panel-cerca">
-    <div class="search-row">
-      <div class="field">
-        <label>Gruppo</label>
-        <select id="s-group" onchange="updateWorkerList()">
-          <option value="">Tutti</option>
-          <option value="AT">A3 AT</option>
-          <option value="exATN">A1 ex ATN</option>
-          <option value="CTTnord">A2 ex CTT</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Lavoratore</label>
-        <select id="s-worker" style="min-width:240px"><option value="">Seleziona...</option></select>
-      </div>
-      <div class="field">
-        <label>Da settimana</label>
-        <input type="date" id="s-from"/>
-      </div>
-      <div class="field">
-        <label>N° settimane</label>
-        <input type="number" id="s-weeks" value="8" min="1" max="52" style="min-width:80px"/>
-      </div>
-      <div class="field" style="justify-content:flex-end">
-        <button class="btn" onclick="searchWorker()">Cerca</button>
-      </div>
-    </div>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--mattina)"></div>Mattina (dispari)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--pomeriggio)"></div>Pomeriggio (pari)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--rep-mat)"></div>Rep. Mattina (R1-R3)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--rep-pom)"></div>Rep. Pom. (R4+)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--riposo)"></div>Riposo</div>
-    </div>
-    <div id="r-cerca"><div class="empty-state"><div class="icon">🔍</div><p>Seleziona un lavoratore per vedere i suoi turni</p></div></div>
-  </div>
-
-  <!-- TAB: Cerca Turno -->
-
-  <div class="panel" id="panel-cercaturno">
-    <div class="search-row">
-      <div class="field">
-        <label>Numero turno</label>
-        <input type="number" id="ct-num" min="100" max="999" placeholder="es. 136" style="min-width:140px"/>
-      </div>
-      <div class="field">
-        <label>Settimana del</label>
-        <input type="date" id="ct-date"/>
-      </div>
-      <div class="field">
-        <label>Gruppo</label>
-        <select id="ct-group">
-          <option value="">Tutti i gruppi</option>
-          <option value="AT">A3 AT</option>
-          <option value="exATN">A1 ex ATN</option>
-          <option value="CTTnord">A2 ex CTT</option>
-        </select>
-      </div>
-      <div class="field" style="justify-content:flex-end">
-        <button class="btn" onclick="searchTurnoNum()">Cerca</button>
-      </div>
-    </div>
-    <div id="r-cercaturno">
-      <div class="empty-state"><div class="icon">🔢</div><p>Inserisci un numero di turno e una settimana per vedere a chi è assegnato</p></div>
-    </div>
-  </div>
-
-  <!-- TAB: Turno del Giorno -->
-
-  <div class="panel" id="panel-giorno">
-    <div class="search-row">
-      <div class="field">
-        <label>Giorno</label>
-        <input type="date" id="g-date"/>
-      </div>
-      <div class="field">
-        <label>Gruppo</label>
-        <select id="g-group">
-          <option value="">Tutti i gruppi</option>
-          <option value="AT">A3 AT</option>
-          <option value="exATN">A1 ex ATN</option>
-          <option value="CTTnord">A2 ex CTT</option>
-        </select>
-      </div>
-      <div class="field" style="justify-content:flex-end">
-        <button class="btn" onclick="showGiornoView()">Visualizza</button>
-      </div>
-    </div>
-    <div id="r-giorno">
-      <div class="empty-state"><div class="icon">📋</div><p>Seleziona un giorno per vedere tutti i turni assegnati</p></div>
-    </div>
-  </div>
-
-  <!-- TAB: Mattina / Pomeriggio -->
-
-  <div class="panel" id="panel-turno">
-    <div class="search-row">
-      <div class="field"><label>Settimana del</label><input type="date" id="t-date"/></div>
-      <div class="field">
-        <label>Tipo turno</label>
-        <select id="t-type">
-          <option value="mattina">🌅 Mattina (dispari)</option>
-          <option value="pomeriggio">🌆 Pomeriggio (pari)</option>
-          <option value="rep-mat">🔶 Rep. Mattina (R1-R3)</option>
-          <option value="rep-pom">🔷 Rep. Pom. (R4+)</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Giorno</label>
-        <select id="t-day">
-          <option value="">Tutta la settimana</option>
-          <option value="0">Lunedì</option>
-          <option value="1">Martedì</option>
-          <option value="2">Mercoledì</option>
-          <option value="3">Giovedì</option>
-          <option value="4">Venerdì</option>
-          <option value="5">Sabato</option>
-          <option value="6">Domenica</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Gruppo</label>
-        <select id="t-group">
-          <option value="">Tutti</option>
-          <option value="AT">A3 AT</option>
-          <option value="exATN">A1 ex ATN</option>
-          <option value="CTTnord">A2 ex CTT</option>
-        </select>
-      </div>
-      <div class="field" style="justify-content:flex-end"><button class="btn" onclick="showTurnoView()">Cerca</button></div>
-    </div>
-    <div id="r-turno"><div class="empty-state"><div class="icon">🌅</div><p>Seleziona una settimana e un tipo di turno</p></div></div>
-  </div>
-
-  <!-- TAB: Vista Settimana -->
-
-  <div class="panel" id="panel-settimanale">
-    <div class="search-row">
-      <div class="field"><label>Settimana del</label><input type="date" id="w-date"/></div>
-      <div class="field">
-        <label>Gruppo</label>
-        <select id="w-group">
-          <option value="">Tutti</option>
-          <option value="AT">A3 AT</option>
-          <option value="exATN">A1 ex ATN</option>
-          <option value="CTTnord">A2 ex CTT</option>
-        </select>
-      </div>
-      <div class="field" style="justify-content:flex-end"><button class="btn" onclick="showWeekView()">Visualizza</button></div>
-    </div>
-    <div id="r-week"><div class="empty-state"><div class="icon">📅</div><p>Seleziona una data per vedere i turni della settimana</p></div></div>
-  </div>
-
-  <!-- TAB: Panoramica -->
-
-  <div class="panel" id="panel-panoramica">
-    <div class="search-row">
-      <div class="field"><label>Settimana del</label><input type="date" id="o-date"/></div>
-      <div class="field" style="justify-content:flex-end"><button class="btn" onclick="showOverview()">Aggiorna</button></div>
-    </div>
-    <div class="stats-row" id="o-stats"></div>
-    <div id="r-overview"><div class="empty-state"><div class="icon">📊</div><p>Seleziona una data per la panoramica completa</p></div></div>
-  </div>
-
-  <!-- TAB: Cerca Servizio -->
-
-  <div class="panel" id="panel-servizi">
-    <div style="display:flex;gap:.5rem;margin-bottom:1.5rem">
-      <button id="sv-btn-mat" onclick="setSvCat('mat')"
-        style="padding:.55rem 1.4rem;border-radius:8px;border:2px solid var(--mattina);background:rgba(79,158,255,.15);color:var(--mattina);font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s">
-        ☀️ Mattinali (nr. dispari)
-      </button>
-      <button id="sv-btn-pom" onclick="setSvCat('pom')"
-        style="padding:.55rem 1.4rem;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--text2);font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s">
-        🌆 Pomeridiani (nr. pari)
-      </button>
-      <button id="sv-btn-tutti" onclick="setSvCat('tutti')"
-        style="padding:.55rem 1.4rem;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--text2);font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s">
-        🔀 Tutti
-      </button>
-    </div>
-    <div class="search-row">
-      <div class="field">
-        <label>Linea (es. 52, 70)</label>
-        <input type="text" id="sv-linea" placeholder="es. 52" style="min-width:120px"/>
-      </div>
-      <div class="field">
-        <label>Inizio turno da</label>
-        <input type="time" id="sv-inizio-min" style="min-width:130px"/>
-      </div>
-      <div class="field">
-        <label>Fine turno entro</label>
-        <input type="time" id="sv-orario" style="min-width:130px"/>
-      </div>
-      <div class="field">
-        <label>Tipologia</label>
-        <select id="sv-tipo" style="min-width:160px">
-          <option value="">Tutte</option>
-          <option value="CTT_UM">CTT_UM</option>
-          <option value="CTT_EP">CTT_EP</option>
-          <option value="CTT_EM">CTT_EM</option>
-          <option value="CTT_OU">CTT_OU</option>
-          <option value="MS_UNm">MS_UNm</option>
-          <option value="MS_UNp">MS_UNp</option>
-          <option value="MS_UNmp">MS_UNmp</option>
-          <option value="MS_UUm">MS_UUm</option>
-          <option value="MS_UUp">MS_UUp</option>
-          <option value="MS_UUs">MS_UUs</option>
-          <option value="AT_UFT">AT_UFT</option>
-          <option value="AT_Nast">AT_Nast</option>
-        </select>
-      </div>
-      <div class="field" style="justify-content:flex-end">
-        <button class="btn" onclick="searchServizi()">Cerca</button>
-      </div>
-    </div>
-    <div id="sv-cat-info" style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--text2);margin-bottom:1.2rem;padding:.4rem .8rem;background:var(--surface);border-radius:6px;border:1px solid var(--border)">
-      ☀️ <strong style="color:var(--mattina)">Mattinali</strong> — turni con numero dispari
-    </div>
-    <div id="r-servizi">
-      <div class="empty-state"><div class="icon">🚌</div><p>Seleziona la categoria e imposta i filtri</p></div>
-    </div>
-  </div>
-
-  <!-- TAB: Domenica & Festivi -->
-
-  <div class="panel" id="panel-festivi">
-    <div class="festivo-header-banner">
-      <div class="festivo-icon">☀️</div>
-      <div>
-        <div class="festivo-title">Turni Domenica &amp; Festivi — Invernali 25/26</div>
-        <div class="festivo-sub">Validi dal 11.01.2026 · Deposito Catagnina · 26 turni totali</div>
-      </div>
-    </div>
-
-```
-<!-- Filtri festivi -->
-<div class="fv-cat-btns">
-  <button id="fv-btn-tutti" class="fv-cat-btn" onclick="setFvCat('tutti')"
-    style="border-color:var(--festivo);background:rgba(245,158,11,.15);color:var(--festivo)">
-    🔀 Tutti (26)
-  </button>
-  <button id="fv-btn-mat" class="fv-cat-btn" onclick="setFvCat('mat')"
-    style="border-color:var(--border);background:transparent;color:var(--text2)">
-    🌅 Mattina (dispari)
-  </button>
-  <button id="fv-btn-pom" class="fv-cat-btn" onclick="setFvCat('pom')"
-    style="border-color:var(--border);background:transparent;color:var(--text2)">
-    🌆 Pomeriggio (pari)
-  </button>
-  <button id="fv-btn-sera" class="fv-cat-btn" onclick="setFvCat('sera')"
-    style="border-color:var(--border);background:transparent;color:var(--text2)">
-    🌙 Serali (dopo 16:00)
-  </button>
-</div>
-
-<!-- Filtri ricerca festivi -->
-<div class="search-row" style="margin-bottom:1rem">
-  <div class="field">
-    <label>Linea (es. 52, 60, 61)</label>
-    <input type="text" id="fv-linea" placeholder="es. 60" style="min-width:120px"/>
-  </div>
-  <div class="field">
-    <label>Inizio da</label>
-    <input type="time" id="fv-inizio-min" style="min-width:120px"/>
-  </div>
-  <div class="field">
-    <label>Fine entro</label>
-    <input type="time" id="fv-fine-max" style="min-width:120px"/>
-  </div>
-  <div class="field">
-    <label>Tipologia</label>
-    <select id="fv-tipo" style="min-width:160px">
-      <option value="">Tutte</option>
-      <option value="MS_UUm">MS_UUm</option>
-      <option value="CTT_EP">CTT_EP</option>
-      <option value="AT_UFT">AT_UFT</option>
-      <option value="MS_UNp">MS_UNp</option>
-      <option value="MS_UNm">MS_UNm</option>
-      <option value="MS_UNmp">MS_UNmp</option>
-      <option value="CTT_EM">CTT_EM</option>
-      <option value="CTT_ENa">CTT_ENa</option>
-      <option value="CTT_OU">CTT_OU</option>
-      <option value="AT_Nast">AT_Nast</option>
-      <option value="MS_UUs">MS_UUs</option>
-      <option value="CTT_EN">CTT_EN</option>
-    </select>
-  </div>
-  <div class="field" style="justify-content:flex-end">
-    <button class="btn btn-festivo" onclick="renderFestivi()">Filtra</button>
+  <div class="tb-right">
+    <div class="tb-rlabel">Obiettivo</div>
+    <div class="tb-rval">€500<span>/mese</span></div>
   </div>
 </div>
 
-<div id="r-festivi">
-  <div class="empty-state"><div class="icon">☀️</div><p>Caricamento turni festivi...</p></div>
-</div>
-```
+<div class="scroll-area">
 
+  <!-- HOME -->
+  <div class="panel active" id="panel-home">
+    <div class="kpi-grid">
+      <div class="kpi-card" style="border-top:2px solid rgba(201,168,76,.3)">
+        <div class="kpi-lbl">Contratti</div>
+        <div class="kpi-val" style="color:var(--gold)" id="kpi-c">0</div>
+      </div>
+      <div class="kpi-card" style="border-top:2px solid rgba(82,168,122,.3)">
+        <div class="kpi-lbl">Guadagno</div>
+        <div class="kpi-val sm" style="color:var(--green2)" id="kpi-g">€0</div>
+      </div>
+      <div class="kpi-card full" style="border-top:2px solid rgba(106,154,191,.2)">
+        <div class="kpi-lbl">Media mensile</div>
+        <div class="kpi-val sm" style="color:var(--blue)" id="kpi-m">€0<span class="kpi-sub">/mese</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="prog-row">
+        <div class="prog-title" id="progLabel">€0 / €500</div>
+        <div class="prog-pct" id="progPct">0%</div>
+      </div>
+      <div class="prog-bg"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      <div class="prog-hint">Progresso verso €500/mese</div>
+    </div>
+    <div class="card">
+      <div class="clabel">Riepilogo mensile</div>
+      <div id="monthRows"></div>
+    </div>
   </div>
 
-</div><!-- /container -->
+  <!-- LEAD / NOMINATIVI -->
+  <div class="panel" id="panel-nominativi">
+    <div class="card card-f">
+      <div class="clabel" style="color:rgba(82,168,122,.45)">Nuovo nominativo</div>
+      <div class="nom-add">
+        <input class="inp sm" id="nomInput" placeholder="Nome e Cognome" onkeydown="if(event.key==='Enter')addNom()" style="margin-bottom:0">
+        <button class="btn-p" style="width:auto;padding:9px 18px;margin-bottom:0;font-size:15px;letter-spacing:0" onclick="addNom()">+</button>
+      </div>
+    </div>
+    <div id="nomList"></div>
+    <div id="nomEmpty" style="text-align:center;padding:28px 0;font-size:11px;color:#334;letter-spacing:2px">NESSUN NOMINATIVO</div>
+  </div>
+
+  <!-- AGGIUNGI -->
+  <div class="panel" id="panel-aggiungi">
+    <div class="card">
+      <div class="clabel">Periodo</div>
+      <div class="pills" id="periodPills"></div>
+    </div>
+    <div class="card" style="border:1px solid rgba(106,154,191,.1)">
+      <div class="clabel" style="color:rgba(106,154,191,.4)">Nuovo periodo</div>
+      <input class="inp" id="newYear" placeholder="Anno (es. 2026)" type="number">
+      <select class="inp" id="newMonth">
+        <option value="">Seleziona mese</option>
+        <option>Gennaio</option><option>Febbraio</option><option>Marzo</option>
+        <option>Aprile</option><option>Maggio</option><option>Giugno</option>
+        <option>Luglio</option><option>Agosto</option><option>Settembre</option>
+        <option>Ottobre</option><option>Novembre</option><option>Dicembre</option>
+      </select>
+      <button class="btn-s" onclick="addPeriod()">+ Aggiungi periodo</button>
+    </div>
+    <div class="card" style="border-top:2px solid rgba(201,168,76,.2)">
+      <div class="clabel">Nuovo contratto</div>
+      <div style="font-family:'Playfair Display',serif;font-size:14px;color:rgba(201,168,76,.5);margin-bottom:13px" id="insertLabel">—</div>
+      <input class="inp" id="clientName" placeholder="Nome e Cognome" onkeydown="if(event.key==='Enter')addClient()">
+      <div style="display:flex;gap:8px;margin-bottom:9px">
+        <div id="chk-luce" class="chk-tog" onclick="toggleCheck('luce')">☀️ Luce</div>
+        <div id="chk-gas" class="chk-tog" onclick="toggleCheck('gas')">🔥 Gas</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:11px">
+        <span style="font-size:10px;color:#445;letter-spacing:2px;white-space:nowrap">€ PROV.</span>
+        <input class="inp" id="provInput" placeholder="es. 45" type="number" style="margin-bottom:0;flex:1">
+      </div>
+      <button class="btn-p" onclick="addClient()">+ AGGIUNGI</button>
+      <div id="insertList"></div>
+    </div>
+  </div>
+
+  <!-- STORICO -->
+  <div class="panel" id="panel-storico">
+    <div id="storicoContent"></div>
+    <div class="proj-sep"><hr><span>Proiezione crescita</span><hr></div>
+    <div id="projRows"></div>
+    <div class="note-box">
+      <div class="note-lbl">Nota strategica</div>
+      <p class="note-txt">Con <span class="hl-g">€45/contratto</span> e raddoppio annuo, raggiungerai <span class="hl-gr">€500/mese</span> nel <span class="hl-w">2028</span>. Già oggi hai chiuso <span class="hl-g">11 contratti in un giorno</span> — con costanza potresti anticipare l'obiettivo di un anno.</p>
+    </div>
+  </div>
+
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-tab="home"><span class="nav-icon">◈</span><span class="nav-label">Home</span></button>
+  <button class="nav-btn" data-tab="nominativi"><span class="nav-icon">👥</span><span class="nav-label">Lead</span></button>
+  <button class="nav-btn" data-tab="aggiungi"><span class="nav-icon">＋</span><span class="nav-label">Aggiungi</span></button>
+  <button class="nav-btn" data-tab="storico"><span class="nav-icon">◉</span><span class="nav-label">Storico</span></button>
+</nav>
+
+</div>
 
 <script>
-const START_MONDAY = new Date('2026-01-05');
-const DAYS = ['LUN','MAR','MER','GIO','VEN','SAB','DOM'];
-const DAY_NAMES_FULL = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
+const OBJ = 500;
+const MESI = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
 
-const ROTATIONS = {
-  exATN: [
-    {pos:1,name:'VOLPI PAOLO',s:['RIP',107,107,107,107,107,'RIP']},
-    {pos:2,name:'GRULLI ALESSANDRO',s:[124,124,124,124,124,124,'RIP']},
-    {pos:3,name:'GUASTALLI MATTEO',s:['R3','R3','R3','R3','R3','R3','RIP']},
-    {pos:4,name:'GUELFI GABRIELE',s:[111,111,111,111,111,111,'RIP']},
-    {pos:5,name:'GUIDI ALESSANDRO',s:[112,112,112,112,112,112,'RIP']},
-    {pos:6,name:'LEONARDI PIERLUIGI',s:[123,123,123,123,123,123,'RIP']},
-    {pos:7,name:'LUNARDINI MATTEO',s:['R11','R11','R11','R11','R11','RIP',122]},
-    {pos:8,name:'MANNELLA GIORGIO',s:[119,119,119,119,'RIP',119,116]},
-    {pos:9,name:'MANTOVANI ALESSANDRO',s:[114,114,114,'RIP',114,114,101]},
-    {pos:10,name:'DEL FREO DOMENICA',s:['RIP','R1','R1','R1','R1','R1','RIP']},
-    {pos:11,name:'MARCUCCETTI GIUSEPPE',s:[144,144,144,144,144,144,'RIP']},
-    {pos:12,name:'MAUCERI ANTONIO',s:[137,137,137,137,137,137,'RIP']},
-    {pos:13,name:'ZAVANI ANDREA',s:['R13','R13','R13','R13','R13','R13','RIP']},
-    {pos:14,name:'MEDUSEI PAOLO',s:[103,103,103,103,103,103,'RIP']},
-    {pos:15,name:'MENCONI MARCO',s:[128,128,128,128,128,128,'RIP']},
-    {pos:16,name:'FOSCHI FEDERICO',s:[126,126,126,126,'RIP',126,105]},
-    {pos:17,name:'DEL BERGIOLO STEFANO',s:[131,131,131,'RIP',131,131,106]},
-    {pos:18,name:'MICALI AMANDA',s:['R12','R12','RIP','R12','R12','R12','R3']},
-    {pos:19,name:'MONTONE GIOVANNI',s:[107,'RIP','R6',114,126,183,'RIP']},
-    {pos:20,name:'MUSSI DANIELE',s:[133,133,133,133,133,133,'RIP']},
-    {pos:21,name:'NARI PAOLO',s:['R10',187,'R12','R2',119,'R11','RIP']},
-    {pos:22,name:'NOVELLI MICHELE',s:[165,165,165,165,165,165,'RIP']},
-    {pos:23,name:'ORLANDI CARLO',s:[170,170,170,170,170,170,'RIP']},
-    {pos:24,name:'PALMA GIACOMO',s:['R7','R7','R7','R7','R7','R7','RIP']},
-    {pos:25,name:'PITANTI ANTONIO',s:[183,183,183,183,183,'RIP',104]},
-    {pos:26,name:'POGGI ANDREA',s:[140,104,138,162,'RIP',130,'R2']},
-    {pos:27,name:'FINELLI GIANNI',s:[147,147,'RIP',147,147,147,120]},
-    {pos:28,name:'RICCI MARIA BEATRICE',s:['RIP',140,140,140,140,140,'RIP']},
-    {pos:29,name:'BORZONI ERNESTO',s:['R4','R4','R4','R4','R4','R4','RIP']},
-    {pos:30,name:'SALVIETTI DAVIDE',s:[139,139,139,139,139,139,'RIP']},
-    {pos:31,name:"D'ANNA SALVATORE",s:['R9','R9','R9','R9','R9','R9','RIP']},
-    {pos:32,name:'TAMAGNA MICHELE',s:[157,157,157,157,157,157,'RIP']},
-    {pos:33,name:'TENERANI LUIGI',s:['R14','R14','R14','R14','R14','R14','RIP']},
-    {pos:34,name:'DELLA PINA SAURO',s:['R1',143,147,131,193,'RIP',128]},
-    {pos:35,name:'FAZZI LEONARDO',s:[138,138,'RIP',138,138,138,126]},
-    {pos:36,name:'ANDREANI DAVIDE',s:[187,'RIP',187,187,187,187,'R1']},
-    {pos:37,name:'TELLESCHI WALTER',s:['RIP','R10','R10','R10','R10','R10','RIP']},
-    {pos:38,name:'TRINCHI VINCENZO',s:[151,151,151,151,151,151,'RIP']},
-    {pos:39,name:'BALDINI FABRIZIO',s:[150,150,150,150,150,150,'RIP']},
-    {pos:40,name:'BRACCI GIANLUCA',s:[105,105,105,105,105,105,'RIP']},
-    {pos:41,name:'BERTANELLI MATTEO',s:[106,106,106,106,106,106,'RIP']},
-    {pos:42,name:'BERTANELLI MARCO',s:['R5','R5','R5','R5','R5','R5','RIP']},
-    {pos:43,name:'TERENZONI ALESSANDRO',s:[193,193,193,193,'RIP',193,108]},
-    {pos:44,name:'BIANCHINI MICHELE',s:[162,162,162,'RIP',162,162,'R4']},
-    {pos:45,name:'BOLOGNA FEDERICO MARIA',s:['R6','R6','RIP','R6','R6','R6',113]},
-    {pos:46,name:'BONINI JESSICA',s:[143,'RIP',143,143,143,143,'RIP']},
-    {pos:47,name:'GRANAI FABIO',s:[152,152,152,152,152,152,'RIP']},
-    {pos:48,name:'CARLINI MARCO',s:[113,113,113,113,113,113,'RIP']},
-    {pos:49,name:'STURLI ANDREA',s:[120,120,120,120,120,120,'RIP']},
-    {pos:50,name:'MASSARI TIZIANO',s:['R8','R8','R8','R8','R8','R8','RIP']},
-    {pos:51,name:'BIANCHIN MARCO',s:[167,167,167,167,167,167,'RIP']},
-    {pos:52,name:'(riga 52)',s:[130,130,130,130,130,'RIP',115]},
-    {pos:53,name:'(riga 53)',s:['R2','R2','R2','RIP','R2','R2',130]},
-    {pos:54,name:'(riga 54)',s:[104,'RIP',104,104,104,104,'R5']},
-  ],
-  CTTnord: [
-    {pos:1,name:'CECIRE VITO MARIA',s:['RIP',109,109,109,109,109,'RIP']},
-    {pos:2,name:'MARCHI RENATO',s:['R5','R5','R5','R5','R5','R5','RIP']},
-    {pos:3,name:'MENCONI SIMONE',s:[102,102,102,102,102,102,'RIP']},
-    {pos:4,name:'DITTA ANDREA',s:[159,159,159,159,159,159,'RIP']},
-    {pos:5,name:'NARDINI ALBERTO',s:['R1','R10','R10',108,160,168,'RIP']},
-    {pos:6,name:'(riga 6)',s:[127,127,127,127,127,127,'RIP']},
-    {pos:7,name:'PIERETTI FEDERICO',s:[168,168,168,168,168,'RIP',109]},
-    {pos:8,name:'ZANOVELLO ANTONIO',s:[171,171,171,171,'RIP',171,'R3']},
-    {pos:9,name:'MANUCCI ANTONIO',s:[108,108,108,'RIP',108,108,134]},
-    {pos:10,name:'SCARSINI FABIO',s:['RIP','R1','R1','R1','R1','R1','RIP']},
-    {pos:11,name:'SIMEONE PIETRO',s:[146,146,146,146,146,146,'RIP']},
-    {pos:12,name:'VITALONI NICOLA',s:[115,115,115,115,115,115,'RIP']},
-    {pos:13,name:'USTIONI GIOVANNA',s:[132,132,132,132,132,132,'RIP']},
-    {pos:14,name:'VANGELI PAOLO',s:[175,175,175,175,175,175,'RIP']},
-    {pos:15,name:'VEZZANI DONATELLA',s:['R8','R8','R8','R8','R8','R8','RIP']},
-    {pos:16,name:'VITALI RICCARDO',s:[109,110,161,181,'RIP',177,110]},
-    {pos:17,name:'ALBERTI ROSSANO',s:[149,149,149,'RIP',149,149,'R5']},
-    {pos:18,name:'(riga 18)',s:['R6','R6','RIP','R6','R6','R6',107]},
-    {pos:19,name:'ANGELINI NICOLA',s:[101,'RIP',101,101,101,101,'RIP']},
-    {pos:20,name:"BERTELA' SIMONE",s:[158,158,158,158,158,158,'RIP']},
-    {pos:21,name:'BOCCIA LUCIA',s:[148,101,'R6',149,171,'R10','RIP']},
-    {pos:22,name:'BONTEMPO MIRCO',s:['R2','R2','R2','R2','R2','R2','RIP']},
-    {pos:23,name:"D'AMBROSIO SALVATORE",s:[116,116,116,116,116,116,'RIP']},
-    {pos:24,name:'BUGLIANI CARLO',s:['R7','R7','R7','R7','R7','R7','RIP']},
-    {pos:25,name:'COLORETTI RUDY',s:[177,177,177,177,177,'RIP','R1']},
-    {pos:26,name:'CONTI GIANLUCA',s:['R9','R9','R9','R9','RIP','R9','R4']},
-    {pos:27,name:'CORROTTI LARRY',s:[161,161,'RIP',161,161,161,136]},
-    {pos:28,name:'DE ANGELI LEONARDO',s:['RIP',148,149,148,148,148,'RIP']},
-    {pos:29,name:'FEBRUARI MASSIMO',s:['R3','R3','R3','R3','R3','R3','RIP']},
-    {pos:30,name:'FIORAVANTI TIZIANO',s:[135,135,135,135,135,135,'RIP']},
-    {pos:31,name:'GIUNTI GIANNI',s:[164,164,164,164,164,164,'RIP']},
-    {pos:32,name:'GNETTI CRISTIAN',s:[141,141,141,141,141,141,'RIP']},
-    {pos:33,name:'IRPO GIUSEPPE',s:['R4','R4','R4','R4','R4','R4','RIP']},
-    {pos:34,name:'LAZZAROTTI GIUSEPPE',s:[160,160,160,160,'RIP',160,102]},
-    {pos:35,name:'LORENZELLI FRANCESCO',s:[181,181,181,'RIP',181,181,'R2']},
-    {pos:36,name:'LORENZETTI ANGELA',s:[110,'RIP',110,110,110,110,124]},
-  ],
-  AT: [
-    {pos:1,name:'LAVELLI ANDREA',s:['RIP',172,172,172,172,172,'RIP']},
-    {pos:2,name:"D'ATRI GIUSEPPE",s:[185,189,'R2',121,169,'R4','RIP']},
-    {pos:3,name:'ROSSI GRAZIANO',s:[134,134,134,134,134,134,'RIP']},
-    {pos:4,name:'SIMEONE CARMELA',s:[195,195,195,195,195,195,'RIP']},
-    {pos:5,name:'SISTI DAVIDE',s:['R10','R10','R10','R10','R10','R10','RIP']},
-    {pos:6,name:"TURRA' PIETRO",s:[125,125,125,125,125,125,'RIP']},
-    {pos:7,name:'VALERI DAVIDE',s:['R5','R5','R5','R5','R5','RIP','R1']},
-    {pos:8,name:'VENERUSO CELESTINO',s:[142,142,142,142,'RIP',142,'R6']},
-    {pos:9,name:'ZOPPI ALESSANDRO',s:[121,121,121,'RIP',121,121,132]},
-    {pos:10,name:'BENEDINI ANDREA',s:['RIP',118,118,118,118,118,'RIP']},
-    {pos:11,name:'VOLPI MARCO',s:['R1','R1','R1','R1','R1','R1','RIP']},
-    {pos:12,name:'COMELLI RONNY',s:[174,174,174,174,174,174,'RIP']},
-    {pos:13,name:'GIROMINI MANUEL',s:[145,145,145,145,145,145,'RIP']},
-    {pos:14,name:"TOMA' STEFANO",s:[156,156,156,156,156,156,'RIP']},
-    {pos:15,name:'DE BIASI THOMAS',s:[129,129,129,129,129,129,'RIP']},
-    {pos:16,name:'(riga 16)',s:['R8','R8','R8','R8','RIP','R8','R2']},
-    {pos:17,name:'BERTELLONI PAOLO',s:[163,163,163,'RIP',163,163,103]},
-    {pos:18,name:'LEZZA GIANLUIGI',s:['R2','R2','RIP','R2','R2','R2',112]},
-    {pos:19,name:'TITOIU CATALIN CLAUDIU',s:[172,'RIP','R11',122,142,'R7','RIP']},
-    {pos:20,name:'DI SCIULLO FEDERICO',s:[117,117,117,117,117,117,'RIP']},
-    {pos:21,name:'ANDREAZZOLI ALESSANDRO',s:['R6','R6','R6','R6','R6','R6','RIP']},
-    {pos:22,name:'DELLA PERUTA PAOLO',s:[154,154,154,154,154,154,'RIP']},
-    {pos:23,name:'DIAMANTI SILVANO',s:[118,'R11','R9',163,'R8','R5','RIP']},
-    {pos:24,name:'ACCARDO CLAUDIO',s:[155,155,155,155,155,155,'RIP']},
-    {pos:25,name:'AMATO TOMMASO',s:['R7','R7','R7','R7','R7','RIP','R4']},
-    {pos:26,name:'BALLONI IVANE',s:[169,169,169,169,'RIP',169,'R5']},
-    {pos:27,name:'BARATTINI MARCO',s:['R9','R9','RIP','R9','R9','R9',111]},
-    {pos:28,name:'BASCHERINI FABIO',s:['RIP',185,185,185,185,185,'RIP']},
-    {pos:29,name:'FRANCHI LUIGI',s:[166,166,166,166,166,166,'RIP']},
-    {pos:30,name:'BERTI ALBINO',s:['R3','R3','R3','R3','R3','R3','RIP']},
-    {pos:31,name:'GEREVINI MORENO',s:[179,179,179,179,179,179,'RIP']},
-    {pos:32,name:'GUAZZELLI LUCA',s:[136,136,136,136,136,136,'RIP']},
-    {pos:33,name:'GUIDALI ANNALISA',s:[191,191,191,191,191,191,'RIP']},
-    {pos:34,name:'IRIONE VITTORIO',s:['R4','R4','R4','R4','R4','RIP',118]},
-    {pos:35,name:"KLUSKOVA' NIKOLA",s:[122,122,122,'RIP',122,122,'R3']},
-    {pos:36,name:'BERTOLONI MARCO',s:[189,'RIP',189,189,189,189,114]},
-  ]
+const proj = [
+  {anno:2025,contratti:20,guadagno:800},
+  {anno:2026,contratti:40,guadagno:1800},
+  {anno:2027,contratti:80,guadagno:3600},
+  {anno:2028,contratti:160,guadagno:7200},
+];
+
+let dati = {
+  2025:{Dicembre:[
+    {nome:"Giuseppe D'Atri",luce:1,gas:0,prov:40,paid:false,paidDate:null},
+    {nome:"Natalia Ceban",luce:1,gas:1,prov:40,paid:false,paidDate:null},
+    {nome:"Nikola Kruscova",luce:1,gas:1,prov:40,paid:false,paidDate:null},
+    {nome:"Raffaella Pula",luce:1,gas:0,prov:40,paid:false,paidDate:null},
+    {nome:"Gisberta Manucci",luce:1,gas:1,prov:40,paid:false,paidDate:null},
+    {nome:"Sevgi Dogrusus",luce:1,gas:1,prov:40,paid:false,paidDate:null},
+  ]},
+  2026:{Marzo:[
+    {nome:"Barbara Lubrano",luce:1,gas:1,prov:45,paid:false,paidDate:null},
+    {nome:"Silvia Provvedi",luce:1,gas:1,prov:45,paid:false,paidDate:null},
+    {nome:"Salvatore D'Ambrosio",luce:1,gas:1,prov:45,paid:false,paidDate:null},
+    {nome:"Claudio Accardo",luce:1,gas:1,prov:45,paid:false,paidDate:null},
+    {nome:"Alessandra Bosi",luce:1,gas:1,prov:45,paid:false,paidDate:null},
+    {nome:"Luigi Accardo",luce:1,gas:0,prov:45,paid:false,paidDate:null},
+  ]}
 };
 
-/* ── Helpers ── */
-function getMonday(d){const date=new Date(d);date.setHours(0,0,0,0);const day=date.getDay();date.setDate(date.getDate()+(day===0?-6:1-day));return date;}
-function weekOffset(m){return Math.round((m-START_MONDAY)/(7*24*60*60*1000));}
-function getRow(g,pos,wo){const rot=ROTATIONS[g];const idx=((pos-1)+wo)%rot.length;return rot[(idx+rot.length)%rot.length];}
-function shiftClass(v){if(!v||v==='RIP')return'riposo';const s=String(v);if(s.startsWith('R')){const n=parseInt(s.slice(1));return n<=3?'rep-mat':'rep-pom';}return parseInt(s)%2===0?'pomeriggio':'mattina';}
-function shiftLabel(v){if(!v||v==='RIP')return'Riposo';const s=String(v);if(s.startsWith('R')){const n=parseInt(s.slice(1));return n<=3?'Rep. Mattina':'Rep. Pom.';}return parseInt(s)%2===0?'Pomeriggio':'Mattina';}
-function shiftOrari(v){
-  if(!v||v==='RIP'||String(v).startsWith('R')) return null;
-  const key='MS'+String(v).padStart(3,'0');
-  const t=TURNI_SERVIZIO.find(x=>x.num===key);
-  return t ? {inizio:t.inizio, fine:t.fine} : null;
-}
-function fmt(d){return d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});}
+let nominativi = [];
+let selAnno = "2026", selMese = "Marzo";
+let chkLuce = false, chkGas = false;
+let curTab = "home";
+let nomOpenId = null;
 
-/* ── Tab switch ── */
-function switchTab(id,el){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('panel-'+id).classList.add('active');
-  el.classList.add('active');
-  if(id==='festivi') renderFestivi();
-}
+/* UTILS */
+function allC(){ return Object.values(dati).flatMap(a => Object.values(a).flat()); }
+function totalC(){ return allC().reduce((s,c) => s + (c.luce + c.gas), 0); }
+function totalG(){ return allC().reduce((s,c) => s + (c.luce + c.gas) * c.prov, 0); }
+function totalMonths(){ return Object.values(dati).flatMap(a => Object.keys(a)).length; }
+function avgM(){ return Math.round(totalG() / Math.max(1, totalMonths())); }
+function pct(){ return Math.min(100, (avgM() / OBJ) * 100); }
+function mG(a,m){ return (dati[a]?.[m] || []).reduce((s,c) => s + (c.luce + c.gas) * c.prov, 0); }
+function mC(a,m){ return (dati[a]?.[m] || []).reduce((s,c) => s + (c.luce + c.gas), 0); }
+function nowDate(){ return new Date().toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}); }
 
-/* ── Worker list ── */
-function updateWorkerList(){
-  const group=document.getElementById('s-group').value;
-  const sel=document.getElementById('s-worker');
-  const prev=sel.value;
-  sel.innerHTML='<option value="">Seleziona...</option>';
-  const groups=group?[group]:Object.keys(ROTATIONS);
-  const workers=[];
-  groups.forEach(g=>ROTATIONS[g].forEach(r=>{if(!r.name.startsWith('('))workers.push({label:r.name,group:g,pos:r.pos});}));
-  workers.sort((a,b)=>a.label.localeCompare(b.label)).forEach(w=>{
-    const o=document.createElement('option');
-    o.value=JSON.stringify({group:w.group,pos:w.pos});
-    o.textContent=w.label+(group?'':` [${w.group}]`);
-    if(o.value===prev)o.selected=true;
-    sel.appendChild(o);
-  });
+/* STORAGE */
+function saveData(){
+  try {
+    localStorage.setItem('ne_dati', JSON.stringify(dati));
+    localStorage.setItem('ne_nom', JSON.stringify(nominativi));
+  } catch(e){}
+}
+function loadData(){
+  try {
+    const d = localStorage.getItem('ne_dati');
+    const n = localStorage.getItem('ne_nom');
+    if(d) dati = JSON.parse(d);
+    if(n) nominativi = JSON.parse(n);
+  } catch(e){}
 }
 
-/* ── Cerca Turno per Numero ── */
-function searchTurnoNum(){
-  const numStr=document.getElementById('ct-num').value.trim();
-  const dv=document.getElementById('ct-date').value;
-  if(!numStr){alert('Inserisci un numero di turno');return;}
-  if(!dv){alert('Seleziona una settimana');return;}
-  const turnoNum=parseInt(numStr);
-  const group=document.getElementById('ct-group').value;
-  const monday=getMonday(new Date(dv));
-  const wo=weekOffset(monday);
-  const groups=group?[group]:Object.keys(ROTATIONS);
-  const results=[];
-  groups.forEach(g=>{
-    ROTATIONS[g].forEach(r=>{
-      if(r.name.startsWith('('))return;
-      const row=getRow(g,r.pos,wo);
-      const matchDays=[];
-      row.s.forEach((shift,di)=>{if(String(shift)===String(turnoNum))matchDays.push(di);});
-      if(matchDays.length>0)results.push({name:r.name,group:g,days:matchDays,row:row.pos});
+/* RENDER DISPATCH */
+function render(){
+  if(curTab === 'home') renderHome();
+  else if(curTab === 'nominativi') renderNom();
+  else if(curTab === 'aggiungi') renderAgg();
+  else if(curTab === 'storico') renderStorico();
+}
+
+/* HOME */
+function renderHome(){
+  document.getElementById('kpi-c').textContent = totalC();
+  document.getElementById('kpi-g').textContent = '€' + totalG().toLocaleString('it-IT');
+  document.getElementById('kpi-m').innerHTML = '€' + avgM() + '<span class="kpi-sub">/mese</span>';
+  const p = pct();
+  document.getElementById('progLabel').textContent = '€' + avgM() + ' / €' + OBJ;
+  document.getElementById('progPct').textContent = Math.round(p) + '%';
+  setTimeout(() => document.getElementById('progFill').style.width = p + '%', 80);
+  let rows = '';
+  Object.keys(dati).sort().forEach(anno => {
+    Object.keys(dati[anno]).sort((a,b) => MESI.indexOf(a) - MESI.indexOf(b)).forEach(mese => {
+      const g = mG(anno, mese);
+      const pp = Math.min(100, (g / OBJ) * 100);
+      rows += `<div class="month-row">
+        <div class="mname">${mese}<br><span class="yr">${anno}</span></div>
+        <div class="mbar-bg"><div class="mbar-fill" style="width:${pp}%"></div></div>
+        <div class="mearn">€${g}</div>
+      </div>`;
     });
   });
-  results.sort((a,b)=>a.name.localeCompare(b.name));
-  const cls=shiftClass(turnoNum);
-  const lbl=shiftLabel(turnoNum);
-  const orari=shiftOrari(turnoNum);
-  const pillColors={mattina:{bg:'rgba(79,158,255,.15)',color:'var(--mattina)'},pomeriggio:{bg:'rgba(255,107,74,.15)',color:'var(--pomeriggio)'},'rep-mat':{bg:'rgba(167,139,250,.15)',color:'var(--rep-mat)'},'rep-pom':{bg:'rgba(251,146,60,.15)',color:'var(--rep-pom)'},riposo:{bg:'rgba(58,63,82,.4)',color:'var(--text2)'}};
-  const pc=pillColors[cls]||pillColors.riposo;
-  let html=`<div class="result-section"><div class="turno-result-header"><div class="turno-num-badge" style="border-color:${pc.color}"><span class="tnb-label">Turno</span><span style="color:${pc.color}">${turnoNum}</span><span class="tnb-type" style="color:${pc.color}">${lbl}</span>${orari?`<span style="font-family:'DM Mono',monospace;font-size:.65rem;color:${pc.color};opacity:.85;margin-top:.2rem;display:block">${orari.inizio} → ${orari.fine}</span>`:''}</div><div><div style="font-family:'DM Mono',monospace;font-size:.85rem;color:var(--text2)">Settimana del <strong style="color:var(--text)">${fmt(monday)}</strong></div><div style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--text2);margin-top:.3rem">${results.length} lavorator${results.length===1?'e':'i'} con questo turno</div></div></div>`;
-  if(results.length===0){
-    html+=`<div class="empty-state" style="padding:2rem"><div class="icon">🔍</div><p>Nessun lavoratore ha il turno <strong>${turnoNum}</strong> questa settimana</p></div>`;
-  }else{
-    html+=`<div class="cerca-turno-list">`;
-    results.forEach(r=>{
-      html+=`<div class="ct-row"><div><div class="ct-worker">${r.name}</div><div class="ct-group">${r.group} &nbsp;·&nbsp; riga ${r.row}</div></div><div class="ct-days">`;
-      r.days.forEach(di=>{html+=`<div class="ct-day-pill" style="background:${pc.bg};color:${pc.color}">${DAYS[di]}</div>`;});
-      html+=`</div></div>`;
-    });
-    html+=`</div>`;
-  }
-  html+=`</div>`;
-  document.getElementById('r-cercaturno').innerHTML=html;
+  document.getElementById('monthRows').innerHTML = rows;
 }
 
-/* ── Cerca lavoratore ── */
-function searchWorker(){
-  const val=document.getElementById('s-worker').value;
-  if(!val){alert('Seleziona un lavoratore');return;}
-  const {group,pos}=JSON.parse(val);
-  const numW=parseInt(document.getElementById('s-weeks').value)||8;
-  const fromDate=document.getElementById('s-from').value?new Date(document.getElementById('s-from').value):new Date();
-  const startMon=getMonday(fromDate);
-  const wo0=weekOffset(startMon);
-  const todayMon=getMonday(new Date());
-  const worker=ROTATIONS[group].find(r=>r.pos===pos);
-  let html=`<div class="result-section"><div class="worker-badge"><div class="worker-code">${worker.name}</div><div class="worker-info">Gruppo: <strong>${group}</strong> &nbsp;·&nbsp; Pos. iniziale: riga <strong>${pos}</strong> &nbsp;·&nbsp; Totale righe: <strong>${ROTATIONS[group].length}</strong></div></div><div class="weeks-grid">`;
-  for(let w=0;w<numW;w++){
-    const wMon=new Date(startMon);wMon.setDate(wMon.getDate()+w*7);
-    const wo=wo0+w;
-    const row=getRow(group,pos,wo);
-    const isCurrent=wMon.getTime()===todayMon.getTime();
-    html+=`<div class="week-row${isCurrent?' current-week':''}">`;
-    html+=`<div class="week-label"><strong>Settimana ${w+1}${isCurrent?'<span class="current-badge">ORA</span>':''}</strong>${fmt(wMon)}</div>`;
-    html+=`<div class="week-position"><span class="pos-num">${row.pos}</span>riga</div>`;
-    html+=`<div class="days-row">`;
-    DAYS.forEach((day,di)=>{const shift=row.s[di];const cls=shiftClass(shift);const orari=shiftOrari(shift);html+=`<div class="day-cell shift-${cls}"><span class="day-name">${day}</span><span class="day-shift">${shift}</span>${orari?`<span style="font-family:'DM Mono',monospace;font-size:.52rem;color:inherit;opacity:.8;display:block;margin-top:1px;line-height:1.2">${orari.inizio}<br>${orari.fine}</span>`:''}</div>`;});
-    html+=`</div></div>`;
-  }
-  html+=`</div></div>`;
-  document.getElementById('r-cerca').innerHTML=html;
-}
-
-/* ── Turno del Giorno ── */
-let _giornoFilter='all';
-function showGiornoView(filterOverride){
-  const dv=document.getElementById('g-date').value;
-  if(!dv){alert('Seleziona un giorno');return;}
-  const group=document.getElementById('g-group').value;
-  const date=new Date(dv);date.setHours(0,0,0,0);
-  const jsDay=date.getDay();
-  const dayIdx=jsDay===0?6:jsDay-1;
-  const monday=getMonday(date);
-  const wo=weekOffset(monday);
-  const groups=group?[group]:Object.keys(ROTATIONS);
-  const all=[];
-  groups.forEach(g=>{
-    ROTATIONS[g].forEach(r=>{
-      if(r.name.startsWith('('))return;
-      const row=getRow(g,r.pos,wo);
-      const shift=row.s[dayIdx];
-      const cls=shiftClass(shift);
-      all.push({name:r.name,group:g,shift:shift||'RIP',cls});
-    });
-  });
-  all.sort((a,b)=>a.name.localeCompare(b.name));
-  const counts={mattina:0,pomeriggio:0,'rep-mat':0,'rep-pom':0,riposo:0};
-  all.forEach(w=>counts[w.cls]=(counts[w.cls]||0)+1);
-  const activeFilter=filterOverride||_giornoFilter;
-  _giornoFilter=activeFilter;
-  const filtered=activeFilter==='all'?all:all.filter(w=>w.cls===activeFilter);
-  const dayNameFull=DAY_NAMES_FULL[dayIdx];
-  const isToday=date.toDateString()===new Date().toDateString();
-  const pillColors={mattina:{bg:'rgba(79,158,255,.15)',color:'var(--mattina)'},pomeriggio:{bg:'rgba(255,107,74,.15)',color:'var(--pomeriggio)'},'rep-mat':{bg:'rgba(167,139,250,.15)',color:'var(--rep-mat)'},'rep-pom':{bg:'rgba(251,146,60,.15)',color:'var(--rep-pom)'},riposo:{bg:'rgba(58,63,82,.4)',color:'var(--text2)'}};
-  const filterLabels={all:`Tutti (${all.length})`,mattina:`🌅 Mattina (${counts.mattina})`,pomeriggio:`🌆 Pomeriggio (${counts.pomeriggio})`,'rep-mat':`🔶 Rep. Mat. (${counts['rep-mat']})`,'rep-pom':`🔷 Rep. Pom. (${counts['rep-pom']})`,riposo:`💤 Riposo (${counts.riposo})`};
-  let html=`<div class="result-section"><div class="giorno-header"><div class="giorno-date-badge"><div class="gdb-day">${date.toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'})}${isToday?' <span class="current-badge">OGGI</span>':''}</div><div class="gdb-label">${dayNameFull}</div></div><div class="giorno-totals">`;
-  Object.entries(pillColors).forEach(([k,v])=>{if(!counts[k])return;const labels={mattina:'Mattina',pomeriggio:'Pomeriggio','rep-mat':'Rep. Mat.','rep-pom':'Rep. Pom.',riposo:'Riposo'};html+=`<div class="giorno-pill" style="background:${v.bg};color:${v.color};border-color:${v.color}">${labels[k]}: <strong>${counts[k]}</strong></div>`;});
-  html+=`</div></div><div class="giorno-filter-tabs">`;
-  Object.entries(filterLabels).forEach(([k,lbl])=>{const cls=k==='all'?'all':k;html+=`<button class="gf-tab ${activeFilter===k?'active '+cls:''}" onclick="showGiornoView('${k}')">${lbl}</button>`;});
-  html+=`</div>`;
-  if(filtered.length===0){
-    html+=`<div class="empty-state" style="padding:2rem"><div class="icon">🔍</div><p>Nessun lavoratore con questo filtro</p></div>`;
-  }else{
-    html+=`<div class="giorno-list">`;
-    filtered.forEach(w=>{
-      const p=pillColors[w.cls]||pillColors.riposo;
-      const orari=shiftOrari(w.shift);
-      html+=`<div class="giorno-row"><div><div class="giorno-worker">${w.name}</div><div class="giorno-group">${w.group}</div></div><div style="text-align:center"><div class="giorno-code" style="color:var(--text2)">${w.shift}</div>${orari?`<div style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--text2);line-height:1.4">${orari.inizio} → ${orari.fine}</div>`:''}</div><div class="giorno-shift-badge ${w.cls}" style="background:${p.bg};color:${p.color}">${shiftLabel(w.shift)}</div></div>`;
-    });
-    html+=`</div>`;
-  }
-  html+=`</div>`;
-  document.getElementById('r-giorno').innerHTML=html;
-}
-
-/* ── Vista Settimana ── */
-function showWeekView(){
-  const dv=document.getElementById('w-date').value;
-  if(!dv){alert('Seleziona una data');return;}
-  const group=document.getElementById('w-group').value;
-  const monday=getMonday(new Date(dv));
-  const wo=weekOffset(monday);
-  const groups=group?[group]:Object.keys(ROTATIONS);
-  let html=`<div class="result-section"><p style="font-family:'DM Mono',monospace;font-size:.85rem;color:var(--text2);margin-bottom:1.2rem">Settimana del ${fmt(monday)}</p>`;
-  groups.forEach(g=>{
-    html+=`<div class="group-section"><div class="group-title">${g}</div><div class="weekly-grid">`;
-    DAYS.forEach((day,di)=>{
-      const isWE=di>=5;
-      html+=`<div class="day-column"><div class="day-header${isWE?' weekend':''}">${day}</div><div class="shift-list">`;
-      ROTATIONS[g].forEach((r)=>{
-        const row=getRow(g,r.pos,wo);
-        const shift=row.s[di];
-        if(!shift||shift==='RIP')return;
-        const cls=shiftClass(shift);
-        const orari=shiftOrari(shift);
-        html+=`<div class="shift-item ${cls}"><span class="worker-name">${r.name}</span><span class="shift-type">${shift} · ${shiftLabel(shift)}${orari?' · '+orari.inizio+'→'+orari.fine:''}</span></div>`;
-      });
-      html+=`</div></div>`;
-    });
-    html+=`</div></div>`;
-  });
-  html+=`</div>`;
-  document.getElementById('r-week').innerHTML=html;
-}
-
-/* ── Panoramica ── */
-function showOverview(){
-  const dv=document.getElementById('o-date').value;
-  if(!dv){alert('Seleziona una data');return;}
-  const monday=getMonday(new Date(dv));
-  const wo=weekOffset(monday);
-  let mat=0,pom=0,rip=0,rep=0;
-  Object.keys(ROTATIONS).forEach(g=>ROTATIONS[g].forEach((r)=>{const row=getRow(g,r.pos,wo);row.s.forEach(sh=>{const c=shiftClass(sh);if(c==='mattina')mat++;else if(c==='pomeriggio')pom++;else if(c==='riposo')rip++;else rep++;});}));
-  document.getElementById('o-stats').innerHTML=`<div class="stat-card"><div class="stat-label">Turni Mattina</div><div class="stat-value" style="color:var(--mattina)">${mat}</div></div><div class="stat-card"><div class="stat-label">Turni Pomeriggio</div><div class="stat-value" style="color:var(--pomeriggio)">${pom}</div></div><div class="stat-card"><div class="stat-label">Reperibilità</div><div class="stat-value" style="color:var(--rep-mat)">${rep}</div></div><div class="stat-card"><div class="stat-label">Giorni Riposo</div><div class="stat-value" style="color:var(--text2)">${rip}</div></div>`;
-  let html=`<div class="result-section">`;
-  Object.keys(ROTATIONS).forEach(g=>{
-    html+=`<div class="group-section"><div class="group-title">${g} — ${ROTATIONS[g].length} lavoratori</div><div class="weeks-grid">`;
-    ROTATIONS[g].forEach((r)=>{
-      const row=getRow(g,r.pos,wo);
-      html+=`<div class="week-row"><div class="week-label"><strong>${r.name}</strong><span style="font-size:.7rem;color:var(--text2);display:block">→ riga ${row.pos}</span></div><div></div><div class="days-row">`;
-      DAYS.forEach((day,di)=>{const shift=row.s[di];const cls=shiftClass(shift);const orari=shiftOrari(shift);html+=`<div class="day-cell shift-${cls}"><span class="day-name">${day}</span><span class="day-shift">${shift||'RIP'}</span>${orari?`<span style="font-family:'DM Mono',monospace;font-size:.52rem;color:inherit;opacity:.8;display:block;margin-top:1px;line-height:1.2">${orari.inizio}<br>${orari.fine}</span>`:''}</div>`;});
-      html+=`</div></div>`;
-    });
-    html+=`</div></div>`;
-  });
-  html+=`</div>`;
-  document.getElementById('r-overview').innerHTML=html;
-}
-
-/* ── Mattina/Pomeriggio ── */
-function showTurnoView(){
-  const dv=document.getElementById('t-date').value;
-  if(!dv){alert('Seleziona una data');return;}
-  const tipo=document.getElementById('t-type').value;
-  const dayFilter=document.getElementById('t-day').value;
-  const group=document.getElementById('t-group').value;
-  const monday=getMonday(new Date(dv));
-  const wo=weekOffset(monday);
-  const groups=group?[group]:Object.keys(ROTATIONS);
-  const dayIdxs=dayFilter===''?[0,1,2,3,4,5,6]:[parseInt(dayFilter)];
-  const tipoLabel={'mattina':'🌅 Mattina','pomeriggio':'🌆 Pomeriggio','rep-mat':'🔶 Rep. Mattina','rep-pom':'🔷 Rep. Pom.'};
-  const tipoColor={'mattina':'var(--mattina)','pomeriggio':'var(--pomeriggio)','rep-mat':'var(--rep-mat)','rep-pom':'var(--rep-pom)'};
-  const results=[];
-  groups.forEach(g=>{
-    ROTATIONS[g].forEach((r)=>{
-      const row=getRow(g,r.pos,wo);
-      const matchDays=[];
-      dayIdxs.forEach(di=>{const shift=row.s[di];if(shiftClass(shift)===tipo)matchDays.push({day:DAYS[di],shift});});
-      if(matchDays.length>0)results.push({name:r.name,group:g,days:matchDays});
-    });
-  });
-  const dayLabel=dayFilter===''?'tutta la settimana':DAY_NAMES_FULL[parseInt(dayFilter)];
-  const tcBg=(k)=>tipoColor[k].replace(')',',0.12)').replace('var(--mattina','rgba(79,158,255').replace('var(--pomeriggio','rgba(255,107,74').replace('var(--rep-mat','rgba(167,139,250').replace('var(--rep-pom','rgba(251,146,60');
-  let html=`<div class="result-section"><div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap"><div style="font-family:'DM Mono',monospace;font-size:.85rem;color:var(--text2)">Settimana del <strong style="color:var(--text)">${fmt(monday)}</strong> — ${dayLabel}</div><div style="font-family:'DM Mono',monospace;font-size:.8rem;color:${tipoColor[tipo]};background:${tcBg(tipo)};padding:.3rem .8rem;border-radius:20px;border:1px solid ${tipoColor[tipo]}">${tipoLabel[tipo]}</div><div style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--text2)">${results.length} lavoratori trovati</div></div>`;
-  if(results.length===0){
-    html+=`<div class="no-results" style="text-align:center;padding:3rem;color:var(--text2);font-family:'DM Mono',monospace">Nessun lavoratore con questo tipo di turno</div>`;
-  }else{
-    const byGroup={};
-    results.forEach(r=>{if(!byGroup[r.group])byGroup[r.group]=[];byGroup[r.group].push(r);});
-    Object.keys(byGroup).forEach(g=>{
-      html+=`<div class="group-section"><div class="group-title">${g} — ${byGroup[g].length} lavoratori</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.6rem">`;
-      byGroup[g].forEach(r=>{
-        html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.8rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem"><div style="font-family:'DM Mono',monospace;font-size:.82rem;color:var(--text);font-weight:500">${r.name}</div><div style="display:flex;gap:.3rem;flex-wrap:wrap;justify-content:flex-end">`;
-        r.days.forEach(d=>{html+=`<div style="font-family:'DM Mono',monospace;font-size:.68rem;background:${tcBg(tipo)};color:${tipoColor[tipo]};padding:.2rem .5rem;border-radius:6px">${d.day} · ${d.shift}</div>`;});
-        html+=`</div></div>`;
-      });
-      html+=`</div></div>`;
-    });
-  }
-  html+=`</div>`;
-  document.getElementById('r-turno').innerHTML=html;
-}
-
-/* ══════════════════════════════════════════
-   DATABASE TURNI SERVIZIO FERIALI (MS101–MS195)
-   ══════════════════════════════════════════ */
-const TURNI_SERVIZIO = [
-  {num:'MS101',tipo:'CTT_UM',inizio:'06:03',fine:'13:45',linee:['L70','L48','L71','L49'],desc:'L70 Via Parma↔Carrara Osp, L48/L49 Torano/Miseglia'},
-  {num:'MS102',tipo:'CTT_EP',inizio:'12:55',fine:'20:01',linee:['L61','L75','L82'],desc:'L61 Massa FS↔Osp.Apuane, L75 Massa Via Europa↔Carrara Osp'},
-  {num:'MS103',tipo:'MS_UUm',inizio:'05:00',fine:'12:00',linee:[],desc:'Disposizione Catagnina'},
-  {num:'MS104',tipo:'MS_UUp',inizio:'12:56',fine:'20:50',linee:['L68','L77','L65','L78','L67'],desc:'L68 Massa FS↔Crocello/Cinquale'},
-  {num:'MS105',tipo:'MS_UNmp',inizio:'05:53',fine:'15:33',linee:['L52','L78'],desc:'L52 Carrara Osp↔Fossa Maestra, L78 Massa FS↔Resceto'},
-  {num:'MS106',tipo:'MS_UNp',inizio:'13:48',fine:'20:49',linee:['L68','L70'],desc:'L68 Massa FS↔Cinquale, L70 Carrara Osp↔Via Parma'},
-  {num:'MS107',tipo:'MS_UNm',inizio:'06:41',fine:'14:28',linee:['L77','L68','L67','L79'],desc:'L77 Massa Via Europa↔Due Madonne'},
-  {num:'MS108',tipo:'CTT_EP',inizio:'12:37',fine:'20:33',linee:['L17','L82','L70','L52'],desc:'L17 Carrara↔Sarzana'},
-  {num:'MS109',tipo:'CTT_UM',inizio:'06:30',fine:'14:23',linee:['L62','L107'],desc:'L62 Massa FS↔Cinquale'},
-  {num:'MS110',tipo:'CTT_EP',inizio:'12:54',fine:'20:23',linee:['L77','L74','L39','L72','L47'],desc:'L77 Carducci, L74 Massa↔Carrara'},
-  {num:'MS111',tipo:'MS_UNm',inizio:'05:53',fine:'13:55',linee:['L50','L56','L51'],desc:'L50 Carrara↔Bergiola/Bedizzano'},
-  {num:'MS112',tipo:'MS_UNp',inizio:'13:06',fine:'20:44',linee:['L52','L50'],desc:'L52 Paradiso/Fossa Maestra, L50 Bedizzano/Bergiola'},
-  {num:'MS113',tipo:'MS_UNm',inizio:'05:53',fine:'13:17',linee:['L61','L60'],desc:'L61 Massa FS↔Osp.Apuane, L60 Marina di Massa↔Massa FS'},
-  {num:'MS114',tipo:'MS_UNp',inizio:'12:48',fine:'20:40',linee:['L50','L52'],desc:'L50 Carrara↔Bergiola/Colonnata'},
-  {num:'MS115',tipo:'CTT_OU',inizio:'06:02',fine:'13:12',linee:['L75','L65'],desc:'L75 Carrara Osp↔Massa Via Europa'},
-  {num:'MS116',tipo:'CTT_OU',inizio:'13:15',fine:'21:07',linee:['L65','L60'],desc:'L65 Biforco, L60 Massa FS↔Marina di Massa'},
-  {num:'MS117',tipo:'AT_UFT',inizio:'06:13',fine:'14:05',linee:['L17','L60'],desc:'L17 Massa Via Europa↔Sarzana'},
-  {num:'MS118',tipo:'AT_Nast',inizio:'12:52',fine:'20:12',linee:['L52'],desc:'L52 Avenza/Fossa Maestra/Marinella↔Carrara Ospedale'},
-  {num:'MS119',tipo:'MS_UNm',inizio:'06:53',fine:'14:12',linee:['L52','L50','L48'],desc:'L52 Fossa Maestra, L50 Colonnata'},
-  {num:'MS120',tipo:'MS_UNp',inizio:'12:48',fine:'20:45',linee:['L50','L39','L49','L74'],desc:'L50 Colonnata, L39 Fosdinovo'},
-  {num:'MS121',tipo:'AT_Nast',inizio:'06:30',fine:'13:30',linee:['L52','L70'],desc:'L52 Marinella/Fossa Maestra, L70 Carrara↔Via Parma'},
-  {num:'MS122',tipo:'AT_UFT',inizio:'13:03',fine:'20:16',linee:['L52','L70'],desc:'L52 Avenza/Fossa Maestra/Marinella'},
-  {num:'MS123',tipo:'MS_UNm',inizio:'06:05',fine:'14:03',linee:['L601','L63','L62','L77'],desc:'L601 Piazza Menconi↔Sarzana'},
-  {num:'MS124',tipo:'MS_UNp',inizio:'12:46',fine:'20:32',linee:['L77','L72','L60'],desc:'L77 Due Madonne/Alberghiero'},
-  {num:'MS125',tipo:'AT_UFT',inizio:'06:50',fine:'14:09',linee:['L52','L70'],desc:'L52 Fossa Maestra, L70 Carrara↔Via Parma'},
-  {num:'MS126',tipo:'MS_UNp',inizio:'12:43',fine:'18:53',linee:['L39','L48','L50','L74'],desc:'L39 Castelpoggio, L48 Torano'},
-  {num:'MS127',tipo:'CTT_OU',inizio:'06:57',fine:'14:23',linee:['L52','L53','L71'],desc:'L71 Avenza→Via Garibaldi'},
-  {num:'MS128',tipo:'MS_UUs',inizio:'16:28',fine:'22:47',linee:['L51','L61'],desc:'L51 Carrara↔Osp.Apuane (serali)'},
-  {num:'MS129',tipo:'AT_Nast',inizio:'06:35',fine:'13:46',linee:['L52','L72'],desc:'L72 Avenza↔Carrara Osp'},
-  {num:'MS130',tipo:'MS_UNp',inizio:'13:38',fine:'20:46',linee:['L49','L50','L52'],desc:'L52 Avenza/Fossa Maestra, L50 Colonnata'},
-  {num:'MS131',tipo:'MS_UNm',inizio:'06:48',fine:'14:27',linee:['L51','L63','L64','L77'],desc:'L77 Via Casola, L51 Carrara↔Osp.Apuane'},
-  {num:'MS132',tipo:'CTT_EP',inizio:'12:42',fine:'20:43',linee:['L16','L17','L71'],desc:'L17 Massa↔Aulla'},
-  {num:'MS133',tipo:'MS_UNmp',inizio:'06:38',fine:'17:25',linee:['L51','L60'],desc:'L60 Massa FS↔Marina di Massa'},
-  {num:'MS134',tipo:'AT_UFT',inizio:'12:55',fine:'19:43',linee:['L63','L75'],desc:'L63 Via Casola↔Piazza Menconi'},
-  {num:'MS135',tipo:'CTT_EM',inizio:'05:32',fine:'13:04',linee:['L39','L47','L48','L49','L52','L74'],desc:'L52 Marinella/Fossa Maestra'},
-  {num:'MS136',tipo:'AT_Nast',inizio:'13:13',fine:'20:52',linee:['L52'],desc:'L52 Avenza/Marinella/Fossa Maestra↔Carrara Ospedale'},
-  {num:'MS137',tipo:'MS_UNm',inizio:'05:09',fine:'12:34',linee:['L17','L33','L74'],desc:'L17 Carrara↔Aulla'},
-  {num:'MS138',tipo:'MS_UNp',inizio:'12:43',fine:'20:30',linee:['L61','L73','L75'],desc:'L75 Massa Via Europa↔Carrara Osp'},
-  {num:'MS139',tipo:'MS_UNmp',inizio:'06:33',fine:'16:47',linee:['L49','L54','L61','L73'],desc:'L73 Stadio Marmi↔Bonascola'},
-  {num:'MS140',tipo:'MS_UNp',inizio:'12:45',fine:'20:47',linee:['L48','L66','L74','L76','L79','L83'],desc:'L83 Ortonovo, L48 Torano'},
-  {num:'MS141',tipo:'CTT_ENa',inizio:'07:17',fine:'14:35',linee:['L51','L601','L76'],desc:'L51 Carrara↔Osp.Apuane'},
-  {num:'MS142',tipo:'AT_Nast',inizio:'13:36',fine:'20:59',linee:['L39','L70'],desc:'L70 Avenza/Carrara↔Via Parma'},
-  {num:'MS143',tipo:'MS_UNm',inizio:'05:16',fine:'12:10',linee:['L39','L75'],desc:'L39 Carrara↔Fosdinovo'},
-  {num:'MS144',tipo:'MS_UNp',inizio:'12:48',fine:'20:00',linee:['L47','L48','L49','L52'],desc:'L47 Sorgnano, L48 Torano'},
-  {num:'MS145',tipo:'AT_UFT',inizio:'06:28',fine:'11:55',linee:['L61'],desc:'L61 Massa FS↔Ospedale Apuane (mattinale breve)'},
-  {num:'MS146',tipo:'CTT_EP',inizio:'13:15',fine:'20:33',linee:['L66','L68','L79'],desc:'L66 Antona, L68 Crocello'},
-  {num:'MS147',tipo:'MS_UNm',inizio:'06:03',fine:'13:27',linee:['L50','L65','L74','L83'],desc:'L83 Carrara↔Ortonovo'},
-  {num:'MS148',tipo:'CTT_EP',inizio:'13:42',fine:'20:55',linee:['L51','L75','L83'],desc:'L51 Carrara↔Osp.Apuane'},
-  {num:'MS149',tipo:'CTT_ENa',inizio:'06:12',fine:'16:32',linee:['L17','L601','L63','L73','L77','L79'],desc:'L17 Carrara↔Sarzana (nastro)'},
-  {num:'MS150',tipo:'MS_UNp',inizio:'12:52',fine:'19:10',linee:['L51','L70'],desc:'L70 Avenza/Carrara↔Via Parma'},
-  {num:'MS151',tipo:'MS_UNm',inizio:'05:48',fine:'13:37',linee:['L39','L50','L74','L75'],desc:'L39 Carrara↔Castelpoggio'},
-  {num:'MS152',tipo:'MS_UUp',inizio:'12:42',fine:'19:50',linee:['L60','L61'],desc:'L60 Marina di Massa↔Massa FS'},
-  {num:'MS153',tipo:'CTT_UM',inizio:'06:46',fine:'14:19',linee:['L62','L71','L76','L77'],desc:'L62 Marina di Massa'},
-  {num:'MS154',tipo:'AT_UFT',inizio:'16:33',fine:'23:15',linee:['L61'],desc:'L61 Massa FS↔Osp.Apuane (serale)'},
-  {num:'MS155',tipo:'AT_UFT',inizio:'06:10',fine:'13:36',linee:['L49','L52'],desc:'L49 Miseglia, L52 Fossa Maestra'},
-  {num:'MS156',tipo:'AT_UFT',inizio:'12:40',fine:'20:51',linee:['L17','L601','L63','L73','L76','L79'],desc:'L17 Sarzana→Massa'},
-  {num:'MS157',tipo:'MS_UUm',inizio:'05:18',fine:'11:00',linee:['L51'],desc:'L51 Carrara↔Osp.Apuane (mattinale breve)'},
-  {num:'MS158',tipo:'CTT_OU',inizio:'16:22',fine:'23:23',linee:['L51','L52'],desc:'L52 Fossa Maestra, L51 Carrara (serale)'},
-  {num:'MS159',tipo:'CTT_OU',inizio:'05:20',fine:'11:31',linee:['L47','L50','L73','L74'],desc:'L74 Massa→Carrara'},
-  {num:'MS160',tipo:'CTT_OU',inizio:'13:20',fine:'19:47',linee:['L60','L75'],desc:'L75 Massa Via Europa↔Carrara Osp'},
-  {num:'MS161',tipo:'CTT_EM',inizio:'06:05',fine:'14:03',linee:['L48','L52','L74','L78','L83'],desc:'L78 Massa↔Resceto'},
-  {num:'MS162',tipo:'MS_UUp',inizio:'13:08',fine:'20:55',linee:['L61','L62','L77'],desc:'L61 Massa↔Osp.Apuane'},
-  {num:'MS163',tipo:'AT_UFT',inizio:'07:13',fine:'16:25',linee:['L60','L61'],desc:'L61 Massa↔Osp.Apuane (nastro)'},
-  {num:'MS164',tipo:'CTT_OU',inizio:'13:40',fine:'21:03',linee:['L52'],desc:'L52 Avenza/Fossa Maestra↔Carrara Ospedale'},
-  {num:'MS165',tipo:'MS_UNm',inizio:'06:08',fine:'14:07',linee:['L73','L75'],desc:'L75 Massa Via Europa↔Carrara Osp'},
-  {num:'MS166',tipo:'AT_Nast',inizio:'12:39',fine:'20:26',linee:['L52','L54'],desc:'L54 Carrara↔Lunimare'},
-  {num:'MS167',tipo:'MS_UNm',inizio:'06:33',fine:'14:07',linee:['L47','L71','L72','L73','L74'],desc:'L71 Avenza→Paradiso'},
-  {num:'MS168',tipo:'CTT_EP',inizio:'13:00',fine:'21:11',linee:['L65','L66','L67','L79'],desc:'L79 Casette, L66 Antona'},
-  {num:'MS169',tipo:'AT_Nast',inizio:'07:03',fine:'17:05',linee:['L60'],desc:'L60 Massa FS↔Marina di Massa (nastro)'},
-  {num:'MS170',tipo:'MS_UUs',inizio:'16:08',fine:'22:05',linee:['L51','L61'],desc:'L61 Massa↔Osp.Apuane (serale)'},
-  {num:'MS171',tipo:'CTT_EM',inizio:'06:45',fine:'14:08',linee:['L82'],desc:'L82 Casano↔Carrara Ospedale'},
-  {num:'MS172',tipo:'AT_UFT',inizio:'12:43',fine:'20:43',linee:['L17','L73','L75'],desc:'L17 Massa↔Sarzana'},
-  {num:'MS173',tipo:'AT_Nast',inizio:'06:55',fine:'17:33',linee:['L107','L71'],desc:'L71 Carrara→Osp.Apuane (nastro)'},
-  {num:'MS174',tipo:'AT_UFT',inizio:'13:43',fine:'21:15',linee:['L61','L74','L75'],desc:'L74 Massa↔Carrara'},
-  {num:'MS175',tipo:'CTT_EM',inizio:'06:37',fine:'13:25',linee:['L39','L52','L71','L73'],desc:'L73 Bonascola→Paradiso'},
-  {num:'MS177',tipo:'CTT_EM',inizio:'05:58',fine:'13:23',linee:['L66','L68'],desc:'L68 Massa↔Crocello'},
-  {num:'MS179',tipo:'AT_Nast',inizio:'06:28',fine:'14:27',linee:['L56','L61','L68'],desc:'L68 Massa↔Cinquale'},
-  {num:'MS181',tipo:'CTT_OU',inizio:'05:55',fine:'13:57',linee:['L49','L50','L52','L74'],desc:'L74 Massa→Carrara'},
-  {num:'MS183',tipo:'MS_UNm',inizio:'05:35',fine:'13:10',linee:['L65','L75','L79'],desc:'L65 Biforco, L79 Casette'},
-  {num:'MS185',tipo:'AT_UFT',inizio:'06:35',fine:'14:43',linee:['L107','L71'],desc:'L107 San Martino↔Via VII Luglio'},
-  {num:'MS187',tipo:'MS_UNm',inizio:'06:15',fine:'14:18',linee:['L39','L49','L52','L70','L74','L83'],desc:'L52 Turigliano→Via Parma'},
-  {num:'MS189',tipo:'AT_Nast',inizio:'06:35',fine:'14:16',linee:['L17','L52'],desc:'L17 Sarzana→Carrara Osp'},
-  {num:'MS191',tipo:'AT_UFT',inizio:'06:06',fine:'13:25',linee:['L60','L76','L79'],desc:'L79 Casette, L76 Massa↔Paradiso'},
-  {num:'MS193',tipo:'MS_UNm',inizio:'06:08',fine:'13:52',linee:['L60','L61'],desc:'L60 Marina di Massa↔Massa FS'},
-  {num:'MS195',tipo:'AT_UFT',inizio:'05:43',fine:'13:30',linee:['L60','L61','L77'],desc:'L60 Marina↔Massa FS'}
-];
-
-/* ══════════════════════════════════════════
-   DATABASE TURNI DOMENICA E FESTIVI
-   Fonte: TG_Catagnina_Festivi_invernali_dal_11-01-2026.pdf
-   Validi dal 11.01.2026
-   ══════════════════════════════════════════ */
-const TURNI_FESTIVI = [
-  {
-    num:'FS101', tipo:'MS_UUm', inizio:'08:23', fine:'14:20',
-    linee:['L52'],
-    desc:'L52 Carrara Ospedale↔Fossa Maestra (corse ogni 30min)',
-    dettaglio:[
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'09:28'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'09:58'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'10:28'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'10:58'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'11:28'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'11:58'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'12:28'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'12:58'},
-    ]
-  },
-  {
-    num:'FS102', tipo:'CTT_EP', inizio:'14:00', fine:'20:55',
-    linee:['L52','L47','L39'],
-    desc:'L52 Avenza↔Fossa Maestra, L47 Sorgnano, L39 Castelpoggio',
-    dettaglio:[
-      {linea:'L52',da:'AVENZA VIA TONIOLO',a:'CARRARA OSPEDALE',ora:'14:28'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'15:08'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'15:38'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'16:08'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'16:38'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'17:08'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'17:38'},
-      {linea:'L47',da:'CARRARA OSPEDALE',a:'SORGNANO',ora:'19:10'},
-      {linea:'L47',da:'SORGNANO',a:'CARRARA OSPEDALE',ora:'19:27'},
-      {linea:'L39',da:'CARRARA OSPEDALE',a:'CASTELPOGGIO',ora:'20:03'},
-      {linea:'L39',da:'CASTELPOGGIO',a:'CARRARA OSPEDALE',ora:'20:28'},
-    ]
-  },
-  {
-    num:'FS103', tipo:'AT_UFT', inizio:'10:45', fine:'16:44',
-    linee:['L51','L52'],
-    desc:'L51 Carrara Osp↔Osp.Apuane, L52 Carrara Osp↔Fossa Maestra',
-    dettaglio:[
-      {linea:'L51',da:'CARRARA OSPEDALE',a:'OSPEDALE DELLE APUANE',ora:'11:48'},
-      {linea:'L51',da:'OSPEDALE DELLE APUANE',a:'CARRARA OSPEDALE',ora:'12:24'},
-      {linea:'L51',da:'CARRARA OSPEDALE',a:'OSPEDALE DELLE APUANE',ora:'13:00'},
-      {linea:'L51',da:'OSPEDALE DELLE APUANE',a:'CARRARA OSPEDALE',ora:'13:36'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'14:48'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'15:19'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'15:50'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'16:21'},
-    ]
-  },
-  {
-    num:'FS104', tipo:'MS_UNp', inizio:'13:08', fine:'21:00',
-    linee:['L51','L52'],
-    desc:'L51 Osp.Apuane↔Carrara Osp, L52 Carrara Osp↔Fossa Maestra',
-    dettaglio:[
-      {linea:'L51',da:'OSPEDALE DELLE APUANE',a:'CARRARA OSPEDALE',ora:'14:08'},
-      {linea:'L51',da:'CARRARA OSPEDALE',a:'OSPEDALE DELLE APUANE',ora:'14:43'},
-      {linea:'L51',da:'OSPEDALE DELLE APUANE',a:'CARRARA OSPEDALE',ora:'15:18'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'18:08'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'18:38'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'19:08'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'19:38'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'20:08'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'20:38'},
-    ]
-  },
-  {
-    num:'FS105', tipo:'MS_UNm', inizio:'05:23', fine:'13:02',
-    linee:['L51','L77','L60'],
-    desc:'L51 Carrara Osp↔Osp.Apuane, L77 Massa FS, L60 Massa FS↔Marina',
-    dettaglio:[
-      {linea:'L51',da:'CARRARA OSPEDALE',a:'OSPEDALE DELLE APUANE',ora:'06:33'},
-      {linea:'L51',da:'OSPEDALE DELLE APUANE',a:'CARRARA OSPEDALE',ora:'07:08'},
-      {linea:'L51',da:'CARRARA OSPEDALE',a:'OSPEDALE DELLE APUANE',ora:'07:43'},
-      {linea:'L51',da:'OSPEDALE DELLE APUANE',a:'CARRARA OSPEDALE',ora:'08:18'},
-      {linea:'L77',da:'Baracchini/Bozzone dir.mare',a:'MASSA FS',ora:'09:00'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'10:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'10:55'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'11:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'11:55'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'12:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'12:55'},
-    ]
-  },
-  {
-    num:'FS106', tipo:'MS_UNp', inizio:'12:58', fine:'20:53',
-    linee:['L39','L49','L75','L51','L77'],
-    desc:'L39 Castelpoggio, L49 Miseglia, L75 Massa Via Europa, L51 Osp.Apuane, L77 Massa FS',
-    dettaglio:[
-      {linea:'L39',da:'CARRARA OSPEDALE',a:'CASTELPOGGIO',ora:'14:08'},
-      {linea:'L39',da:'CASTELPOGGIO',a:'CARRARA OSPEDALE',ora:'14:33'},
-      {linea:'L49',da:'CARRARA OSPEDALE',a:'MISEGLIA',ora:'14:50'},
-      {linea:'L49',da:'MISEGLIA',a:'CARRARA OSPEDALE',ora:'15:16'},
-      {linea:'L75',da:'CARRARA OSPEDALE',a:'MASSA VIA EUROPA',ora:'16:33'},
-      {linea:'L75',da:'MASSA VIA EUROPA',a:'CARRARA OSPEDALE',ora:'17:00'},
-      {linea:'L51',da:'CARRARA OSPEDALE',a:'OSPEDALE DELLE APUANE',ora:'18:13'},
-      {linea:'L51',da:'OSPEDALE DELLE APUANE',a:'CARRARA OSPEDALE',ora:'18:48'},
-      {linea:'L51',da:'CARRARA OSPEDALE',a:'OSPEDALE DELLE APUANE',ora:'19:23'},
-      {linea:'L51',da:'OSPEDALE DELLE APUANE',a:'CARRARA OSPEDALE',ora:'19:58'},
-      {linea:'L77',da:'MASSA FS',a:'Baracchini/Bozzone dir.mare',ora:'20:38'},
-    ]
-  },
-  {
-    num:'FS107', tipo:'CTT_EM', inizio:'06:00', fine:'13:14',
-    linee:['L61'],
-    desc:'L61 Massa FS↔Osp.Apuane (corse ogni 35min)',
-    dettaglio:[
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'06:40'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'07:05'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'07:40'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'08:05'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'08:40'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'09:05'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'10:40'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'11:05'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'11:40'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'12:05'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'12:40'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'13:05'},
-    ]
-  },
-  {
-    num:'FS108', tipo:'MS_UNmp', inizio:'12:28', fine:'20:18',
-    linee:['L50','L47','L52'],
-    desc:'L50 Colonnata/Bergiola, L47 Sorgnano, L52 Carrara↔Fossa Maestra',
-    dettaglio:[
-      {linea:'L50',da:'CARRARA OSPEDALE',a:'COLONNATA',ora:'13:32'},
-      {linea:'L50',da:'COLONNATA',a:'CARRARA OSPEDALE',ora:'14:01'},
-      {linea:'L50',da:'CARRARA OSPEDALE',a:'BERGIOLA',ora:'14:30'},
-      {linea:'L50',da:'BERGIOLA',a:'CARRARA OSPEDALE',ora:'14:59'},
-      {linea:'L47',da:'CARRARA OSPEDALE',a:'SORGNANO',ora:'15:15'},
-      {linea:'L47',da:'SORGNANO',a:'CARRARA OSPEDALE',ora:'15:32'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'16:48'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'17:18'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'17:48'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'18:18'},
-      {linea:'L50',da:'CARRARA OSPEDALE',a:'BERGIOLA',ora:'19:27'},
-      {linea:'L50',da:'BERGIOLA',a:'CARRARA OSPEDALE',ora:'19:56'},
-    ]
-  },
-  {
-    num:'FS109', tipo:'CTT_ENa', inizio:'06:35', fine:'14:34',
-    linee:['L61','L60'],
-    desc:'L61 Massa FS↔Osp.Apuane, poi L60 Massa FS↔Marina (nastro)',
-    dettaglio:[
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'07:15'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'07:40'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'08:10'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'08:40'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'09:10'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'09:40'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'10:55'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'11:25'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'11:55'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'12:25'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'12:55'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'13:25'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'13:55'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'14:25'},
-    ]
-  },
-  {
-    num:'FS110', tipo:'CTT_OU', inizio:'13:32', fine:'20:51',
-    linee:['L52','L49','L50'],
-    desc:'L52 Carrara Osp↔Fossa Maestra, L49 Miseglia, L50 Colonnata',
-    dettaglio:[
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'14:28'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'14:58'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'15:28'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'15:58'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'16:28'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'16:58'},
-      {linea:'L49',da:'CARRARA OSPEDALE',a:'MISEGLIA',ora:'19:00'},
-      {linea:'L49',da:'MISEGLIA',a:'CARRARA OSPEDALE',ora:'19:26'},
-      {linea:'L50',da:'CARRARA OSPEDALE',a:'COLONNATA',ora:'19:57'},
-      {linea:'L50',da:'COLONNATA',a:'CARRARA OSPEDALE',ora:'20:26'},
-    ]
-  },
-  {
-    num:'FS111', tipo:'AT_Nast', inizio:'05:43', fine:'13:45',
-    linee:['L60','L61'],
-    desc:'L60 Massa FS↔Marina di Massa, poi L61 Massa FS↔Osp.Apuane (nastro)',
-    dettaglio:[
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'06:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'06:55'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'07:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'07:55'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'08:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'08:55'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'09:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'09:55'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'11:10'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'11:40'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'12:10'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'12:40'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'13:10'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'13:35'},
-    ]
-  },
-  {
-    num:'FS112', tipo:'AT_UFT', inizio:'13:18', fine:'20:44',
-    linee:['L75','L52'],
-    desc:'L75 Massa Via Europa↔Carrara Osp, L52 Carrara Osp↔Fossa Maestra',
-    dettaglio:[
-      {linea:'L75',da:'MASSA VIA EUROPA',a:'CARRARA OSPEDALE',ora:'14:00'},
-      {linea:'L75',da:'CARRARA OSPEDALE',a:'MASSA VIA EUROPA',ora:'14:33'},
-      {linea:'L75',da:'MASSA VIA EUROPA',a:'CARRARA OSPEDALE',ora:'15:01'},
-      {linea:'L75',da:'CARRARA OSPEDALE',a:'MASSA VIA EUROPA',ora:'15:33'},
-      {linea:'L75',da:'MASSA VIA EUROPA',a:'CARRARA OSPEDALE',ora:'16:01'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'18:48'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'19:19'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'19:50'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'20:21'},
-    ]
-  },
-  {
-    num:'FS113', tipo:'MS_UNm', inizio:'06:08', fine:'13:45',
-    linee:['L60','L51'],
-    desc:'L60 Massa FS↔Marina di Massa, poi L51 Carrara Osp↔Osp.Apuane',
-    dettaglio:[
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'06:55'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'07:25'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'07:55'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'08:25'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'08:55'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'09:25'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'09:55'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'10:25'},
-      {linea:'L51',da:'CARRARA OSPEDALE',a:'OSPEDALE DELLE APUANE',ora:'12:23'},
-      {linea:'L51',da:'OSPEDALE DELLE APUANE',a:'CARRARA OSPEDALE',ora:'12:58'},
-      {linea:'L51',da:'CARRARA OSPEDALE',a:'OSPEDALE DELLE APUANE',ora:'13:33'},
-    ]
-  },
-  {
-    num:'FS114', tipo:'AT_UFT', inizio:'13:28', fine:'20:50',
-    linee:['L61'],
-    desc:'L61 Massa FS↔Osp.Apuane (corse ogni 30-35min)',
-    dettaglio:[
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'14:10'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'14:40'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'15:10'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'15:40'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'16:10'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'16:40'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'18:10'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'18:40'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'19:10'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'19:40'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'20:10'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'20:40'},
-    ]
-  },
-  {
-    num:'FS115', tipo:'MS_UNm', inizio:'07:08', fine:'14:25',
-    linee:['L51','L52'],
-    desc:'L51 Carrara Osp↔Osp.Apuane, L52 Carrara Osp↔Fossa Maestra',
-    dettaglio:[
-      {linea:'L51',da:'CARRARA OSPEDALE',a:'OSPEDALE DELLE APUANE',ora:'08:18'},
-      {linea:'L51',da:'OSPEDALE DELLE APUANE',a:'CARRARA OSPEDALE',ora:'08:53'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'09:58'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'10:28'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'10:58'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'11:28'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'11:58'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'12:28'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'12:58'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'13:28'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'13:58'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'AVENZA VIA TONIOLO',ora:'14:12'},
-    ]
-  },
-  {
-    num:'FS116', tipo:'MS_UUs', inizio:'16:38', fine:'22:47',
-    linee:['L60','L61'],
-    desc:'L60 Massa FS↔Marina di Massa, L61 Massa FS↔Osp.Apuane (serali)',
-    dettaglio:[
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'17:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'17:55'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'18:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'18:55'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'19:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'19:55'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'21:10'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'21:40'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'22:10'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'22:40'},
-    ]
-  },
-  {
-    num:'FS118', tipo:'AT_UFT', inizio:'12:58', fine:'20:43',
-    linee:['L79','L67','L75'],
-    desc:'L79 Casette, L67 Bergiola Maggiore, L75 Carrara Osp↔Massa Via Europa',
-    dettaglio:[
-      {linea:'L79',da:'MASSA FS',a:'CASETTE',ora:'13:49'},
-      {linea:'L79',da:'CASETTE',a:'MASSA FS',ora:'14:26'},
-      {linea:'L67',da:'MASSA FS',a:'BERGIOLA MAGGIORE',ora:'15:01'},
-      {linea:'L67',da:'BERGIOLA MAGGIORE',a:'MASSA FS',ora:'15:40'},
-      {linea:'L75',da:'CARRARA OSPEDALE',a:'MASSA VIA EUROPA',ora:'18:33'},
-      {linea:'L75',da:'MASSA VIA EUROPA',a:'CARRARA OSPEDALE',ora:'19:01'},
-      {linea:'L75',da:'CARRARA OSPEDALE',a:'MASSA VIA EUROPA',ora:'19:33'},
-      {linea:'L75',da:'MASSA VIA EUROPA',a:'CARRARA OSPEDALE',ora:'20:01'},
-      {linea:'L75',da:'CARRARA OSPEDALE',a:'MASSA VIA EUROPA',ora:'20:33'},
-    ]
-  },
-  {
-    num:'FS120', tipo:'MS_UNp', inizio:'13:26', fine:'21:00',
-    linee:['L66','L65','L70'],
-    desc:'L66 Antona, L65 Biforco, L70 Avenza↔Via Parma/Via Genova',
-    dettaglio:[
-      {linea:'L66',da:'MASSA FS',a:'ANTONA',ora:'14:26'},
-      {linea:'L66',da:'ANTONA',a:'MASSA FS',ora:'15:04'},
-      {linea:'L65',da:'MASSA FS',a:'BIFORCO',ora:'15:38'},
-      {linea:'L65',da:'BIFORCO',a:'MASSA FS',ora:'16:09'},
-      {linea:'L70',da:'AVENZA VIA TONIOLO',a:'CARRARA OSPEDALE',ora:'17:34'},
-      {linea:'L70',da:'CARRARA OSPEDALE',a:'VIA PARMA/VIA GENOVA',ora:'18:10'},
-      {linea:'L70',da:'VIA PARMA/VIA GENOVA',a:'CARRARA OSPEDALE',ora:'18:44'},
-      {linea:'L70',da:'CARRARA OSPEDALE',a:'VIA PARMA/VIA GENOVA',ora:'19:20'},
-      {linea:'L70',da:'VIA PARMA/VIA GENOVA',a:'CARRARA OSPEDALE',ora:'19:54'},
-      {linea:'L70',da:'CARRARA OSPEDALE',a:'VIA PARMA/VIA GENOVA',ora:'20:30'},
-      {linea:'L70',da:'VIA PARMA/VIA GENOVA',a:'AVENZA VIA TONIOLO',ora:'20:48'},
-    ]
-  },
-  {
-    num:'FS122', tipo:'MS_UNp', inizio:'12:56', fine:'20:20',
-    linee:['L68','L78','L52'],
-    desc:'L68 Massa FS↔Crocello, L78 Massa FS↔Resceto, L52 Carrara Osp↔Fossa Maestra',
-    dettaglio:[
-      {linea:'L68',da:'MASSA FS',a:'CROCELLO',ora:'13:50'},
-      {linea:'L68',da:'CROCELLO',a:'MASSA FS',ora:'14:25'},
-      {linea:'L78',da:'MASSA FS',a:'RESCETO',ora:'15:06'},
-      {linea:'L78',da:'RESCETO',a:'MASSA FS',ora:'15:44'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'17:28'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'17:58'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'18:28'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'18:58'},
-      {linea:'L52',da:'CARRARA OSPEDALE',a:'FOSSA MAESTRA',ora:'19:28'},
-      {linea:'L52',da:'FOSSA MAESTRA',a:'CARRARA OSPEDALE',ora:'19:58'},
-    ]
-  },
-  {
-    num:'FS124', tipo:'CTT_EP', inizio:'13:00', fine:'21:03',
-    linee:['L61','L78','L65'],
-    desc:'L61 Massa FS↔Osp.Apuane, L78 Resceto, L65 Biforco',
-    dettaglio:[
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'13:40'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'14:05'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'14:40'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'15:05'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'15:40'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'16:05'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'16:40'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'17:05'},
-      {linea:'L78',da:'MASSA FS',a:'RESCETO',ora:'19:11'},
-      {linea:'L78',da:'RESCETO',a:'MASSA FS',ora:'19:49'},
-      {linea:'L65',da:'MASSA FS',a:'BIFORCO',ora:'20:18'},
-      {linea:'L65',da:'BIFORCO',a:'MASSA FS',ora:'20:49'},
-    ]
-  },
-  {
-    num:'FS126', tipo:'MS_UNp', inizio:'13:23', fine:'20:48',
-    linee:['L70','L67','L66'],
-    desc:'L70 Avenza↔Via Parma/Via Genova, L67 Bergiola Maggiore, L66 Antona',
-    dettaglio:[
-      {linea:'L70',da:'AVENZA VIA TONIOLO',a:'CARRARA OSPEDALE',ora:'14:04'},
-      {linea:'L70',da:'CARRARA OSPEDALE',a:'VIA PARMA/VIA GENOVA',ora:'14:40'},
-      {linea:'L70',da:'VIA PARMA/VIA GENOVA',a:'CARRARA OSPEDALE',ora:'15:14'},
-      {linea:'L70',da:'CARRARA OSPEDALE',a:'VIA PARMA/VIA GENOVA',ora:'15:50'},
-      {linea:'L70',da:'VIA PARMA/VIA GENOVA',a:'CARRARA OSPEDALE',ora:'16:24'},
-      {linea:'L70',da:'CARRARA OSPEDALE',a:'VIA PARMA/VIA GENOVA',ora:'17:00'},
-      {linea:'L70',da:'VIA PARMA/VIA GENOVA',a:'AVENZA VIA TONIOLO',ora:'17:18'},
-      {linea:'L67',da:'MASSA FS',a:'BERGIOLA MAGGIORE',ora:'18:51'},
-      {linea:'L67',da:'BERGIOLA MAGGIORE',a:'MASSA FS',ora:'19:23'},
-      {linea:'L66',da:'MASSA FS',a:'ANTONA',ora:'20:01'},
-      {linea:'L66',da:'ANTONA',a:'MASSA FS',ora:'20:39'},
-    ]
-  },
-  {
-    num:'FS128', tipo:'MS_UUs', inizio:'16:28', fine:'23:25',
-    linee:['L75','L51'],
-    desc:'L75 Carrara Osp↔Massa Via Europa, L51 Carrara Osp↔Osp.Apuane (serali)',
-    dettaglio:[
-      {linea:'L75',da:'CARRARA OSPEDALE',a:'MASSA VIA EUROPA',ora:'17:33'},
-      {linea:'L75',da:'MASSA VIA EUROPA',a:'CARRARA OSPEDALE',ora:'18:00'},
-      {linea:'L51',da:'CARRARA OSPEDALE',a:'OSPEDALE DELLE APUANE',ora:'18:48'},
-      {linea:'L51',da:'OSPEDALE DELLE APUANE',a:'CARRARA OSPEDALE',ora:'19:23'},
-      {linea:'L51',da:'CARRARA OSPEDALE',a:'OSPEDALE DELLE APUANE',ora:'19:58'},
-      {linea:'L51',da:'OSPEDALE DELLE APUANE',a:'CARRARA OSPEDALE',ora:'20:33'},
-      {linea:'L51',da:'CARRARA OSPEDALE',a:'OSPEDALE DELLE APUANE',ora:'21:43'},
-      {linea:'L51',da:'OSPEDALE DELLE APUANE',a:'CARRARA OSPEDALE',ora:'23:03'},
-    ]
-  },
-  {
-    num:'FS130', tipo:'MS_UUs', inizio:'17:08', fine:'22:32',
-    linee:['L60'],
-    desc:'L60 Massa FS↔Marina di Massa (corse ogni 30min, serale)',
-    dettaglio:[
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'17:55'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'18:25'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'18:55'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'19:25'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'19:55'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'20:25'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'20:55'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'21:25'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'21:55'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'22:25'},
-    ]
-  },
-  {
-    num:'FS132', tipo:'AT_UFT', inizio:'14:13', fine:'22:15',
-    linee:['L60','L61'],
-    desc:'L60 Massa FS↔Marina di Massa, poi L61 Massa FS↔Osp.Apuane (serale)',
-    dettaglio:[
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'14:55'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'15:25'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'15:55'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'16:25'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'16:55'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'17:25'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'19:40'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'20:05'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'20:40'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'21:05'},
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'21:40'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'22:05'},
-    ]
-  },
-  {
-    num:'FS134', tipo:'CTT_EP', inizio:'12:45', fine:'20:43',
-    linee:['L60','L79','L68'],
-    desc:'L60 Massa FS↔Marina di Massa, L79 Casette, L68 Crocello',
-    dettaglio:[
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'13:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'13:55'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'14:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'14:55'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'15:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'15:55'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'16:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'16:55'},
-      {linea:'L79',da:'MASSA FS',a:'CASETTE',ora:'18:49'},
-      {linea:'L79',da:'CASETTE',a:'MASSA FS',ora:'19:25'},
-      {linea:'L68',da:'MASSA FS',a:'CROCELLO',ora:'19:56'},
-      {linea:'L68',da:'CROCELLO',a:'MASSA FS',ora:'20:31'},
-    ]
-  },
-  {
-    num:'FS136', tipo:'CTT_EN', inizio:'18:00', fine:'23:07',
-    linee:['L61','L60'],
-    desc:'L61 Massa FS↔Osp.Apuane, L60 Massa FS↔Marina di Massa (notturno)',
-    dettaglio:[
-      {linea:'L61',da:'MASSA FS',a:'OSPEDALE DELLE APUANE',ora:'18:40'},
-      {linea:'L61',da:'OSPEDALE DELLE APUANE',a:'MASSA FS',ora:'19:05'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'20:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'20:55'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'21:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'21:55'},
-      {linea:'L60',da:'MASSA FS',a:'Marina di Massa Piazza Betti',ora:'22:25'},
-      {linea:'L60',da:'Marina di Massa Piazza Betti',a:'MASSA FS',ora:'22:55'},
-    ]
-  }
-];
-
-/* ══════════════════════════════════════════
-   LOGICA SEZIONE FESTIVI
-   ══════════════════════════════════════════ */
-let fvCategoria = 'tutti';
-
-function setFvCat(cat){
-  fvCategoria = cat;
-  const defs = {
-    tutti: {borderColor:'var(--festivo)', background:'rgba(245,158,11,.15)', color:'var(--festivo)'},
-    mat:   {borderColor:'var(--mattina)', background:'rgba(79,158,255,.15)',  color:'var(--mattina)'},
-    pom:   {borderColor:'var(--pomeriggio)', background:'rgba(255,107,74,.15)', color:'var(--pomeriggio)'},
-    sera:  {borderColor:'var(--rep-mat)', background:'rgba(167,139,250,.15)', color:'var(--rep-mat)'},
-  };
-  const neutral = {borderColor:'var(--border)', background:'transparent', color:'var(--text2)'};
-  ['tutti','mat','pom','sera'].forEach(k => {
-    const b = document.getElementById('fv-btn-'+k);
-    const s = k===cat ? defs[k] : neutral;
-    b.style.borderColor = s.borderColor;
-    b.style.background = s.background;
-    b.style.color = s.color;
-  });
-  renderFestivi();
-}
-
-function renderFestivi(){
-  const linea = (document.getElementById('fv-linea').value||'').trim().toUpperCase();
-  const iniMin = document.getElementById('fv-inizio-min').value;
-  const fineMax = document.getElementById('fv-fine-max').value;
-  const tipo = document.getElementById('fv-tipo').value;
-  const toMin = t => { if(!t) return null; const [h,m]=t.split(':'); return parseInt(h)*60+parseInt(m); };
-
-  let pool = [...TURNI_FESTIVI];
-
-  // Categoria (mat = dispari, pom = pari, sera = inizio >= 16:00)
-  if(fvCategoria === 'mat'){
-    pool = pool.filter(t => { const n=parseInt(t.num.replace('FS','')); return n%2!==0; });
-  } else if(fvCategoria === 'pom'){
-    pool = pool.filter(t => { const n=parseInt(t.num.replace('FS','')); return n%2===0; });
-  } else if(fvCategoria === 'sera'){
-    pool = pool.filter(t => toMin(t.inizio) >= 16*60);
-  }
-
-  // Filtri aggiuntivi
-  if(linea){
-    const cl = linea.startsWith('L') ? linea : 'L'+linea;
-    pool = pool.filter(t => t.linee.includes(cl));
-  }
-  if(iniMin) pool = pool.filter(t => toMin(t.inizio) >= toMin(iniMin));
-  if(fineMax) pool = pool.filter(t => toMin(t.fine) <= toMin(fineMax));
-  if(tipo) pool = pool.filter(t => t.tipo === tipo);
-
-  if(pool.length === 0){
-    document.getElementById('r-festivi').innerHTML =
-      '<div class="empty-state"><div class="icon">🔍</div><p>Nessun turno trovato con questi filtri</p></div>';
-    return;
-  }
-
-  // Raggruppa per sezione
-  const matT = pool.filter(t => { const n=parseInt(t.num.replace('FS','')); return n%2!==0 && toMin(t.inizio)<16*60; });
-  const pomT = pool.filter(t => { const n=parseInt(t.num.replace('FS','')); return n%2===0 && toMin(t.inizio)<16*60; });
-  const seraT = pool.filter(t => toMin(t.inizio) >= 16*60);
-
-  const tipoColor={
-    'CTT_UM':'#4f9eff','CTT_EP':'#ff6b4a','CTT_EM':'#fb923c','CTT_OU':'#a78bfa',
-    'CTT_ENa':'#34d399','CTT_EN':'#c084fc',
-    'MS_UNm':'#34d399','MS_UNp':'#f472b6','MS_UNmp':'#facc15',
-    'MS_UUm':'#60a5fa','MS_UUp':'#f87171','MS_UUs':'#c084fc',
-    'AT_UFT':'#2dd4bf','AT_Nast':'#a3e635'
-  };
-
-  function buildCard(t){
-    const col = tipoColor[t.tipo] || '#7a8099';
-    const n = parseInt(t.num.replace('FS',''));
-    const catIcon = toMin(t.inizio)>=16*60 ? '🌙' : n%2!==0 ? '🌅' : '🌆';
-    return `
-    <div class="fv-card">
-      <div class="fv-card-header">
-        <div class="fv-num" style="color:${col}">${catIcon} ${t.num}</div>
-        <div class="fv-tipo" style="color:${col};border-color:${col};background:${col}22">${t.tipo}</div>
-        <div class="fv-orari">Inizio <strong>${t.inizio}</strong> &nbsp;→&nbsp; Fine <strong>${t.fine}</strong></div>
+/* NOMINATIVI / LEAD */
+function renderNom(){
+  const el = document.getElementById('nomList');
+  const em = document.getElementById('nomEmpty');
+  if(!nominativi.length){ el.innerHTML = ''; em.style.display = 'block'; return; }
+  em.style.display = 'none';
+  el.innerHTML = nominativi.map((n, i) => {
+    const isOpen = nomOpenId === n.id;
+    const provDisplay = n.prov ? '€' + n.prov : '';
+    const luceGasIcons = (n.luce || n.gas) ? `<div style="display:flex;gap:3px;flex-shrink:0">${n.luce ? '<span style="font-size:13px">☀️</span>' : ''}${n.gas ? '<span style="font-size:13px">🔥</span>' : ''}</div>` : '';
+    return `<div class="nom-card ${isOpen ? 'open' : ''}" id="nomcard-${n.id}">
+      <div class="nom-card-header" onclick="toggleOpen(${n.id})">
+        <div class="nom-dots">
+          <div class="ndot ${n.co ? 'on-co' : ''}"></div>
+          <div class="ndot ${n.dc ? 'on-dc' : ''}"></div>
+          <div class="ndot ${n.sent ? 'on-sent' : ''}"></div>
+        </div>
+        <div class="nom-card-name">${n.nome}</div>
+        ${luceGasIcons}
+        ${provDisplay ? `<div class="nom-card-prov">${provDisplay}</div>` : ''}
+        <div class="nom-arrow">▼</div>
       </div>
-      <div class="fv-linee">${t.linee.length===0?'<span style="font-family:\'DM Mono\',monospace;font-size:.65rem;color:var(--text2)">Disposizione</span>':t.linee.map(l=>`<span class="fv-linea">${l}</span>`).join('')}</div>
-      <div class="fv-desc">${t.desc}</div>
-      <div class="fv-corsa-list">
-        ${t.dettaglio.map(c=>`<div class="fv-corsa">
-          <span class="fv-linea-badge" style="color:${col}">${c.linea}</span>
-          <span class="fv-ora">${c.ora}</span>
-          <span>${c.da} → ${c.a}</span>
-        </div>`).join('')}
+      <div class="nom-card-body">
+        <div class="nom-steps">
+          <div class="nstep ${n.co ? 'active-co' : ''}" onclick="toggleNomField(${i},'co')">
+            <div class="nstep-icon">${n.co ? '✓' : '○'}</div>
+            <div class="nstep-lbl">Contattato</div>
+          </div>
+          <div class="nstep ${n.dc ? 'active-dc' : ''}" onclick="toggleNomField(${i},'dc')">
+            <div class="nstep-icon">${n.dc ? '✓' : '○'}</div>
+            <div class="nstep-lbl">Documenti</div>
+          </div>
+          <div class="nstep ${n.sent ? 'active-sent' : ''}" onclick="toggleNomField(${i},'sent')">
+            <div class="nstep-icon">${n.sent ? '🤩' : '○'}</div>
+            <div class="nstep-lbl">Inviato</div>
+          </div>
+        </div>
+        <div class="nom-toggles">
+          <div class="ntog ${n.luce ? 'on-luce' : ''}" onclick="toggleNomField(${i},'luce')">☀️ Luce</div>
+          <div class="ntog ${n.gas ? 'on-gas' : ''}" onclick="toggleNomField(${i},'gas')">🔥 Gas</div>
+        </div>
+        <div class="nom-prov-row">
+          <span class="nom-prov-lbl">€ PROVVIGIONE</span>
+          <input class="nom-prov-inp" type="number" placeholder="es. 45" value="${n.prov || ''}" onchange="updateProv(${i}, this.value)">
+        </div>
+        <textarea class="nom-note" placeholder="Note sul cliente..." onchange="updateNote(${i}, this.value)">${n.note || ''}</textarea>
+        <div class="nom-footer">
+          <button class="nrm" onclick="rmNom(${i})">✕ Elimina</button>
+        </div>
       </div>
     </div>`;
-  }
-
-  let html = `<div class="result-section"><div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--text2);margin-bottom:1rem">${pool.length} turni trovati</div>`;
-
-  if(matT.length > 0){
-    html += `<div class="fv-section-title mat">🌅 Turni Mattina (dispari)<span class="fv-count-badge">${matT.length}</span></div>`;
-    html += `<div style="display:grid;gap:.5rem;margin-bottom:1.5rem">${matT.map(buildCard).join('')}</div>`;
-  }
-  if(pomT.length > 0){
-    html += `<div class="fv-section-title pom">🌆 Turni Pomeriggio (pari)<span class="fv-count-badge">${pomT.length}</span></div>`;
-    html += `<div style="display:grid;gap:.5rem;margin-bottom:1.5rem">${pomT.map(buildCard).join('')}</div>`;
-  }
-  if(seraT.length > 0){
-    html += `<div class="fv-section-title sera">🌙 Turni Serali (inizio ≥ 16:00)<span class="fv-count-badge">${seraT.length}</span></div>`;
-    html += `<div style="display:grid;gap:.5rem;margin-bottom:1.5rem">${seraT.map(buildCard).join('')}</div>`;
-  }
-
-  html += `</div>`;
-  document.getElementById('r-festivi').innerHTML = html;
+  }).join('');
 }
 
-/* ══════════════════════════════════════════
-   CERCA SERVIZIO (feriali)
-   ══════════════════════════════════════════ */
-let svCategoria = 'mat';
+function toggleOpen(id){
+  nomOpenId = (nomOpenId === id) ? null : id;
+  renderNom();
+}
 
-function setSvCat(cat){
-  svCategoria = cat;
-  const btns = {mat:'sv-btn-mat', pom:'sv-btn-pom', tutti:'sv-btn-tutti'};
-  Object.entries(btns).forEach(([k,id])=>{
-    const b = document.getElementById(id);
-    if(k===cat){
-      if(k==='mat'){b.style.borderColor='var(--mattina)';b.style.background='rgba(79,158,255,.15)';b.style.color='var(--mattina)';}
-      else if(k==='pom'){b.style.borderColor='var(--pomeriggio)';b.style.background='rgba(255,107,74,.15)';b.style.color='var(--pomeriggio)';}
-      else{b.style.borderColor='var(--accent)';b.style.background='rgba(79,158,255,.1)';b.style.color='var(--accent)';}
-    }else{b.style.borderColor='var(--border)';b.style.background='transparent';b.style.color='var(--text2)';}
+function addNom(){
+  const v = document.getElementById('nomInput').value.trim();
+  if(!v) return;
+  const n = {id: Date.now(), nome: v, co: false, dc: false, sent: false, sentDate: null, luce: false, gas: false, prov: 0, note: ''};
+  nominativi.push(n);
+  nomOpenId = n.id;
+  document.getElementById('nomInput').value = '';
+  saveData();
+  renderNom();
+}
+
+function toggleNomField(i, field){
+  const n = nominativi[i];
+  if(field === 'sent'){
+    n.sent = !n.sent;
+    if(n.sent){
+      n.sentDate = new Date().toISOString();
+      const d = new Date(n.sentDate);
+      const anno = String(d.getFullYear());
+      const mese = MESI[d.getMonth()];
+      if(!dati[anno]) dati[anno] = {};
+      if(!dati[anno][mese]) dati[anno][mese] = [];
+      dati[anno][mese].push({
+        nome: n.nome,
+        luce: n.luce ? 1 : 0,
+        gas: n.gas ? 1 : 0,
+        prov: n.prov || 0,
+        paid: false,
+        paidDate: null,
+        fromLead: true
+      });
+    }
+  } else {
+    n[field] = !n[field];
+  }
+  saveData();
+  renderNom();
+}
+
+function updateNote(i, v){ nominativi[i].note = v; saveData(); }
+function updateProv(i, v){ nominativi[i].prov = parseFloat(v) || 0; saveData(); renderNom(); }
+function rmNom(i){ nominativi.splice(i, 1); saveData(); renderNom(); }
+
+/* AGGIUNGI */
+function renderAgg(){
+  let pills = '';
+  Object.keys(dati).sort().forEach(anno => {
+    Object.keys(dati[anno]).sort((a,b) => MESI.indexOf(a) - MESI.indexOf(b)).forEach(mese => {
+      const on = selAnno == anno && selMese == mese;
+      pills += `<button class="pill${on ? ' active' : ''}" onclick="selPeriod('${anno}','${mese}')">${mese} ${anno}</button>`;
+    });
   });
-  const info = document.getElementById('sv-cat-info');
-  if(cat==='mat') info.innerHTML='☀️ <strong style="color:var(--mattina)">Mattinali</strong> — turni con numero dispari';
-  else if(cat==='pom') info.innerHTML='🌆 <strong style="color:var(--pomeriggio)">Pomeridiani</strong> — turni con numero pari';
-  else info.innerHTML='🔀 <strong style="color:var(--accent)">Tutti i turni</strong> — mattinali + pomeridiani';
-  document.getElementById('r-servizi').innerHTML='<div class="empty-state"><div class="icon">🚌</div><p>Imposta i filtri e cerca</p></div>';
-}
+  document.getElementById('periodPills').innerHTML = pills;
+  document.getElementById('insertLabel').textContent = selMese + ' ' + selAnno;
+  updateChkUI();
 
-function searchServizi(){
-  const linea    = document.getElementById('sv-linea').value.trim().toUpperCase();
-  const iniMin   = document.getElementById('sv-inizio-min').value;
-  const orario   = document.getElementById('sv-orario').value;
-  const tipo     = document.getElementById('sv-tipo').value;
-  const toMin    = t => { if(!t) return null; const [h,m]=t.split(':'); return parseInt(h)*60+parseInt(m); };
-
-  let pool = TURNI_SERVIZIO.filter(t => {
-    const n = parseInt(t.num.replace('MS',''));
-    if(svCategoria==='mat') return n%2!==0;
-    if(svCategoria==='pom') return n%2===0;
-    return true;
-  });
-  if(linea){ const cl=linea.startsWith('L')?linea:'L'+linea; pool=pool.filter(t=>t.linee.includes(cl)); }
-  if(iniMin) pool=pool.filter(t=>toMin(t.inizio)>=toMin(iniMin));
-  if(orario) pool=pool.filter(t=>toMin(t.fine)<=toMin(orario));
-  if(tipo) pool=pool.filter(t=>t.tipo===tipo);
-
-  if(pool.length===0){
-    document.getElementById('r-servizi').innerHTML='<div class="empty-state"><div class="icon">🔍</div><p>Nessun turno trovato</p></div>';
-    return;
+  const list = dati[selAnno]?.[selMese] || [];
+  const totG = list.reduce((s,c) => s + (c.luce + c.gas) * c.prov, 0);
+  const totC = list.reduce((s,c) => s + (c.luce + c.gas), 0);
+  let lh = '';
+  if(list.length){
+    lh = `<div class="ins-lbl">${totC} contratti — €${totG}</div>`;
+    list.forEach((c, i) => {
+      const earn = (c.luce + c.gas) * c.prov;
+      lh += `<div class="ctr-row">
+        <div class="ctr-info">
+          <div class="ctr-name">${c.nome}</div>
+          <div class="ctr-badges">
+            ${c.luce ? '<span class="badge bl">LUCE</span>' : ''}
+            ${c.gas ? '<span class="badge bg">GAS</span>' : ''}
+            ${c.fromLead ? '<span class="badge" style="background:rgba(82,168,122,.07);color:#52a87a;border:1px solid rgba(82,168,122,.18)">LEAD</span>' : ''}
+          </div>
+        </div>
+        <div class="ctr-right">
+          <span class="ctr-earn">€${earn}</span>
+          <button class="paid-btn ${c.paid ? 'paid' : ''}" onclick="togglePaid('${selAnno}','${selMese}',${i})" title="${c.paid ? 'Pagato il ' + c.paidDate : 'Non pagato'}">🤑</button>
+          <button class="brm" onclick="rmSel(${i})">✕</button>
+        </div>
+      </div>`;
+    });
   }
-  const tipoColor={'CTT_UM':'#4f9eff','CTT_EP':'#ff6b4a','CTT_EM':'#fb923c','CTT_OU':'#a78bfa','MS_UNm':'#34d399','MS_UNp':'#f472b6','MS_UNmp':'#facc15','MS_UUm':'#60a5fa','MS_UUp':'#f87171','MS_UUs':'#c084fc','AT_UFT':'#2dd4bf','AT_Nast':'#a3e635'};
-  const catLabel=svCategoria==='mat'?'☀️ Mattinali':svCategoria==='pom'?'🌆 Pomeridiani':'🔀 Tutti';
-  let html=`<div style="margin-bottom:1rem;font-family:'DM Mono',monospace;font-size:.78rem;color:var(--text2)">${catLabel} — <strong style="color:var(--text)">${pool.length}</strong> turni trovati</div><div style="display:grid;gap:.5rem">`;
-  pool.forEach(t=>{
-    const col=tipoColor[t.tipo]||'#7a8099';
-    const n=parseInt(t.num.replace('MS',''));
-    const catIcon=n%2!==0?'☀️':'🌆';
-    html+=`<div class="sv-card"><div class="sv-card-header"><div class="sv-num">${catIcon} ${t.num}</div><div class="sv-tipo" style="color:${col};border-color:${col};background:${col}22">${t.tipo}</div><div class="sv-orari">Inizio <strong>${t.inizio}</strong> &nbsp;→&nbsp; Fine <strong>${t.fine}</strong></div></div><div class="sv-linee">${t.linee.length===0?'<span style="font-family:\'DM Mono\',monospace;font-size:.65rem;color:var(--text2)">Disposizione</span>':t.linee.map(l=>`<span class="sv-linea">${l}</span>`).join('')}</div><div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--text2);margin-top:.4rem">${t.desc}</div></div>`;
-  });
-  html+=`</div>`;
-  document.getElementById('r-servizi').innerHTML=html;
+  document.getElementById('insertList').innerHTML = lh;
 }
 
-/* ══════════════════════════════════════════
-   INIT
-   ══════════════════════════════════════════ */
-function init(){
-  const today=new Date();
-  document.getElementById('today-label').textContent=today.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const wo=weekOffset(getMonday(today));
-  document.getElementById('week-info').textContent=`Settimana ${wo+1} della rotazione`;
-  const ts=today.toISOString().split('T')[0];
-  ['s-from','t-date','w-date','o-date','g-date','ct-date'].forEach(id=>{document.getElementById(id).value=ts;});
-  document.getElementById('s-group').value='AT';
-  updateWorkerList();
-  const sel=document.getElementById('s-worker');
-  for(let o of sel.options){try{if(JSON.parse(o.value).pos===24){o.selected=true;break;}}catch(e){}}
+function updateChkUI(){
+  const l = document.getElementById('chk-luce');
+  const g = document.getElementById('chk-gas');
+  if(!l) return;
+  l.className = 'chk-tog' + (chkLuce ? ' on-luce' : '');
+  g.className = 'chk-tog' + (chkGas ? ' on-gas' : '');
 }
-init();
+
+function toggleCheck(t){
+  if(t === 'luce') chkLuce = !chkLuce;
+  else chkGas = !chkGas;
+  updateChkUI();
+}
+
+function selPeriod(a, m){ selAnno = a; selMese = m; renderAgg(); }
+
+function addPeriod(){
+  const y = document.getElementById('newYear').value.trim();
+  const m = document.getElementById('newMonth').value;
+  if(!y || !m) return;
+  if(!dati[y]) dati[y] = {};
+  if(!dati[y][m]) dati[y][m] = [];
+  selAnno = y; selMese = m;
+  document.getElementById('newYear').value = '';
+  document.getElementById('newMonth').value = '';
+  saveData();
+  renderAgg();
+}
+
+function addClient(){
+  const n = document.getElementById('clientName').value.trim();
+  const pv = parseFloat(document.getElementById('provInput').value) || 0;
+  if(!n || (!chkLuce && !chkGas)) return;
+  if(!dati[selAnno]) dati[selAnno] = {};
+  if(!dati[selAnno][selMese]) dati[selAnno][selMese] = [];
+  dati[selAnno][selMese].push({nome: n, luce: chkLuce ? 1 : 0, gas: chkGas ? 1 : 0, prov: pv, paid: false, paidDate: null});
+  document.getElementById('clientName').value = '';
+  document.getElementById('provInput').value = '';
+  chkLuce = false; chkGas = false;
+  saveData();
+  render();
+}
+
+function togglePaid(a, m, i){
+  const c = dati[a][m][i];
+  c.paid = !c.paid;
+  c.paidDate = c.paid ? nowDate() : null;
+  saveData();
+  renderAgg();
+}
+
+function rmSel(i){
+  dati[selAnno][selMese].splice(i, 1);
+  saveData();
+  render();
+}
+
+/* STORICO */
+function renderStorico(){
+  let html = '';
+  const years = Object.keys(dati).sort();
+  if(!years.length){
+    html = '<div style="text-align:center;padding:28px;font-size:11px;color:#9a9080">Nessun contratto</div>';
+  }
+  years.forEach(anno => {
+    html += `<div class="ysep"><span>${anno}</span><hr></div>`;
+    Object.keys(dati[anno]).sort((a,b) => MESI.indexOf(a) - MESI.indexOf(b)).forEach(mese => {
+      const cl = dati[anno][mese];
+      const nc = cl.reduce((s,c) => s + (c.luce + c.gas), 0);
+      const tg = cl.reduce((s,c) => s + (c.luce + c.gas) * c.prov, 0);
+      let rows = '';
+      cl.forEach((c, i) => {
+        const earn = (c.luce + c.gas) * c.prov;
+        rows += `<div class="crow">
+          <span class="cname">${c.nome}</span>
+          <div class="cright">
+            ${c.luce ? '<span class="badge bl">LUCE</span>' : ''}
+            ${c.gas ? '<span class="badge bg">GAS</span>' : ''}
+            ${c.fromLead ? '<span class="badge" style="background:rgba(82,168,122,.07);color:#52a87a;border:1px solid rgba(82,168,122,.15);font-size:7px">LEAD</span>' : ''}
+            ${c.paid ? '<span class="badge bp">🤑 ' + c.paidDate + '</span>' : ''}
+            <span class="cearn">€${earn}</span>
+            <button class="brm" onclick="rmClient('${anno}','${mese}',${i})">✕</button>
+          </div>
+        </div>`;
+      });
+      html += `<div class="mblock">
+        <div class="mblock-head">
+          <div>
+            <div class="mblock-title">${mese}</div>
+            <div class="mblock-sub">${nc} contratti</div>
+          </div>
+          <div class="mblock-earn">€${tg}</div>
+        </div>
+        ${rows}
+      </div>`;
+    });
+  });
+  document.getElementById('storicoContent').innerHTML = html;
+
+  let ph = '';
+  proj.forEach(p => {
+    const m2 = Math.round(p.guadagno / 12);
+    const ok = m2 >= OBJ;
+    const pp = Math.min(100, (m2 / OBJ) * 100);
+    const fill = ok ? 'linear-gradient(90deg,#52a87a,#6dcf9a)' : 'linear-gradient(90deg,#c9a84c,#e8c060)';
+    ph += `<div class="prow" style="background:${ok ? 'linear-gradient(135deg,#dff0df,#d4e8d4)' : 'linear-gradient(135deg,#eee8de,#e8e0d4)'};border:1px solid ${ok ? 'rgba(82,168,122,.18)' : 'rgba(0,0,0,.06)'};border-left:3px solid ${ok ? '#52a87a' : 'rgba(201,168,76,.3)'}">
+      <div class="pyear" style="color:${ok ? '#52a87a' : 'var(--textl)'};font-weight:${ok ? 700 : 300}">${p.anno}</div>
+      <div class="pbody">
+        <div class="pmeta">
+          <span>${p.contratti} contratti</span>
+          <span class="${ok ? 'ok' : ''}">${ok ? '✓ Obiettivo!' : '€' + (OBJ - m2) + ' mancanti'}</span>
+        </div>
+        <div class="pprog-bg"><div class="pprog-fill" style="width:${pp}%;background:${fill}"></div></div>
+      </div>
+      <div class="pearn">
+        <div class="pearn-val" style="color:${ok ? '#52a87a' : 'var(--gold)'}">€${m2}</div>
+        <div class="pearn-sub">/mese</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('projRows').innerHTML = ph;
+}
+
+function rmClient(a, m, i){
+  dati[a][m].splice(i, 1);
+  saveData();
+  render();
+}
+
+/* NAV */
+function switchTab(tab){
+  curTab = tab;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
+  document.querySelector('.scroll-area').scrollTop = 0;
+  render();
+}
+document.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+
+/* INIT */
+loadData();
+render();
 </script>
-
 </body>
 </html>
